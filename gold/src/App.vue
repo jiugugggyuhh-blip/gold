@@ -57,6 +57,6 @@ const footerComponent = computed(() => {
 const containerClass = computed(() => {
   if (layout.value === 'admin') return 'w-full h-screen'
   if (layout.value === 'user') return 'w-full min-h-screen pb-20 lg:pt-20'
-  return 'container mx-auto p-4'
+  return 'w-full'
 })
 </script>

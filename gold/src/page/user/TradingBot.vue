@@ -1,253 +1,306 @@
-
 <template>
-  <div class="trading-bot-container">
-    <div class="max-w-6xl mx-auto">
-      <!-- Header -->
-      <div class="bot-header">
-        <div class="flex items-center justify-between flex-wrap gap-4">
+  <div class="bot-page" dir="rtl">
+
+    <!-- ── هدر مستقل ── -->
+    <div class="bot-topbar">
+      <div class="bot-topbar-inner">
+        <div class="bot-topbar-left">
+          <div class="bot-logo">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/></svg>
+          </div>
           <div>
-            <h1 class="text-3xl font-bold text-white flex items-center mb-2">
-              <div class="bot-icon-wrapper">
-                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                </svg>
-              </div>
-              ربات معامله گر هوشمند
-            </h1>
-            <p class="text-yellow-200 text-lg">سود تضمینی روزانه با تحلیل هوشمند بازار</p>
+            <div class="bot-topbar-title">ربات معامله‌گر</div>
+            <div class="bot-topbar-sub">هوشمند · طلای آب‌شده</div>
           </div>
-          <div class="flex items-center gap-4 flex-wrap">
-            <!-- Demo Mode Toggle -->
-            <div class="status-badge">
-              <div class="text-sm text-yellow-200 mb-2">حالت نمایش</div>
-              <button 
-                @click="toggleDemoMode" 
-                :class="isDemoMode ? 'bg-purple-500 hover:bg-purple-600' : 'bg-green-500 hover:bg-green-600'"
-                class="px-4 py-2 rounded-lg text-white font-semibold transition-colors flex items-center gap-2"
+        </div>
+        <div class="bot-topbar-right">
+          <div class="live-badge" v-if="livePrice">
+            <span class="live-dot"></span>
+            <span class="live-val">{{ fmt(livePrice) }}</span>
+            <span class="live-unit">T</span>
+            <span :class="liveChange >= 0 ? 'up' : 'down'" class="live-pct">
+              {{ liveChange >= 0 ? '▲' : '▼' }} {{ Math.abs(liveChangePct).toFixed(2) }}٪
+            </span>
+          </div>
+          <div class="sub-pill" :class="subStatus === 'active' ? 'active' : 'inactive'">
+            <span class="sub-dot"></span>
+            <span class="sub-text">{{ subStatus === 'active' ? 'فعال' : 'غیرفعال' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── محتوا ── -->
+    <div class="bot-body">
+
+      <!-- لودینگ اولیه -->
+      <div v-if="loading" class="bot-loader">
+        <div class="spinner"></div>
+        <span>در حال بارگذاری...</span>
+      </div>
+
+      <!-- اشتراک نداره -->
+      <div v-else-if="subStatus !== 'active'" class="purchase-area">
+        <div class="purchase-glow"></div>
+        <div class="purchase-card">
+          <div class="purchase-icon">🤖</div>
+          <h2 class="purchase-title">ربات معامله‌گر طلا</h2>
+          <p class="purchase-desc">با فعال‌سازی اشتراک، ربات هوشمند به‌صورت خودکار در بهترین نقاط طلای آب‌شده معامله می‌کند و سود روزانه واقعی بر اساس نوسان بازار برای شما محاسبه می‌کند.</p>
+
+          <div class="features-grid">
+            <div class="feature-item">
+              <span class="f-icon">📈</span>
+              <span class="f-label">سود روزانه<br><b>تا ۱.۵٪</b></span>
+            </div>
+            <div class="feature-item">
+              <span class="f-icon">🔄</span>
+              <span class="f-label">معاملات<br><b>خودکار</b></span>
+            </div>
+            <div class="feature-item">
+              <span class="f-icon">📊</span>
+              <span class="f-label">گزارش<br><b>روزانه</b></span>
+            </div>
+            <div class="feature-item">
+              <span class="f-icon">⚙️</span>
+              <span class="f-label">تنظیمات<br><b>سفارشی</b></span>
+            </div>
+          </div>
+
+          <div class="price-tag">
+            <span class="price-amount">۱,۰۰۰,۰۰۰</span>
+            <span class="price-unit">تومان / ۳۰ روز</span>
+          </div>
+
+          <button class="buy-btn" @click="purchase" :disabled="purchasing">
+            <span v-if="purchasing" class="btn-spinner"></span>
+            <span v-else>🚀</span>
+            {{ purchasing ? 'در حال پردازش...' : 'فعال‌سازی اشتراک' }}
+          </button>
+          <div v-if="buyError" class="buy-error">{{ buyError }}</div>
+        </div>
+      </div>
+
+      <!-- داشبورد ربات -->
+      <div v-else class="dashboard">
+
+        <!-- ── تب‌های ناوبری ── -->
+        <div class="tab-bar">
+          <button :class="['tab-btn', activeTab === 'stats' ? 'active' : '']" @click="activeTab = 'stats'">
+            📊 آمار
+          </button>
+          <button :class="['tab-btn', activeTab === 'trades' ? 'active' : '']" @click="activeTab = 'trades'">
+            🔄 معاملات
+          </button>
+          <button :class="['tab-btn', activeTab === 'settings' ? 'active' : '']" @click="activeTab = 'settings'">
+            ⚙️ تنظیمات
+          </button>
+        </div>
+
+        <!-- ── تب آمار ── -->
+        <div v-show="activeTab === 'stats'">
+
+          <!-- ربات متوقف است -->
+          <div v-if="stats.botPaused" class="paused-banner">
+            <span>⏸️</span>
+            <div>
+              <b>ربات متوقف است</b>
+              <p>برای فعال‌سازی مجدد به تنظیمات بروید</p>
+            </div>
+            <button class="go-settings-btn" @click="activeTab = 'settings'">تنظیمات</button>
+          </div>
+
+          <!-- کارت‌های آمار -->
+          <div class="stats-row">
+            <div class="stat-box green">
+              <div class="stat-icon">💰</div>
+              <div class="stat-val">{{ fmt(stats.currentInvestment) }}</div>
+              <div class="stat-lbl">سرمایه فعال (تومان)</div>
+            </div>
+            <div class="stat-box gold">
+              <div class="stat-icon">📅</div>
+              <div class="stat-val">{{ fmt(stats.todayProfit) }}</div>
+              <div class="stat-lbl">سود امروز (تومان)</div>
+              <div class="stat-pct" v-if="stats.profitPercent && stats.profitPercent !== '0.00'">{{ stats.profitPercent }}٪</div>
+            </div>
+            <div class="stat-box purple">
+              <div class="stat-icon">🏆</div>
+              <div class="stat-val">{{ fmt(stats.totalProfit) }}</div>
+              <div class="stat-lbl">سود کل (تومان)</div>
+            </div>
+            <div class="stat-box blue">
+              <div class="stat-icon">⚡</div>
+              <div class="stat-val">{{ stats.totalTrades || 0 }}</div>
+              <div class="stat-lbl">کل معاملات</div>
+            </div>
+          </div>
+
+          <!-- اطلاعات بازار ۲۴ ساعته -->
+          <div class="market-card">
+            <div class="market-header">
+              <div class="market-title">
+                <span class="market-dot"></span>
+                نوسان بازار — ۲۴ ساعت گذشته
+              </div>
+              <div class="market-note">از داده‌های ساعتی ذخیره‌شده</div>
+            </div>
+
+            <div v-if="stats.marketInfo" class="market-grid">
+              <div class="market-item">
+                <div class="mi-label">بالاترین</div>
+                <div class="mi-val high">{{ fmt(stats.marketInfo.highPrice) }}</div>
+              </div>
+              <div class="market-item">
+                <div class="mi-label">پایین‌ترین</div>
+                <div class="mi-val low">{{ fmt(stats.marketInfo.lowPrice) }}</div>
+              </div>
+              <div class="market-item">
+                <div class="mi-label">ابتدای روز</div>
+                <div class="mi-val">{{ fmt(stats.marketInfo.openPrice) }}</div>
+              </div>
+              <div class="market-item">
+                <div class="mi-label">انتهای روز</div>
+                <div class="mi-val">{{ fmt(stats.marketInfo.closePrice) }}</div>
+              </div>
+            </div>
+            <div v-else class="market-no-data">
+              <span>⏳</span>
+              <span>داده‌های ۲۴ ساعته در حال جمع‌آوری — هر ساعت یک رکورد ثبت می‌شود</span>
+            </div>
+
+            <!-- قیمت لحظه‌ای -->
+            <div class="live-row" v-if="livePrice">
+              <div class="live-label">قیمت لحظه‌ای طلا آب‌شده</div>
+              <div class="live-price-big">
+                {{ fmt(livePrice) }} <span>تومان</span>
+                <span class="live-refresh-note">هر دقیقه به‌روز می‌شود</span>
+              </div>
+              <div class="live-change-big" :class="liveChange >= 0 ? 'up' : 'down'">
+                {{ liveChange >= 0 ? '▲' : '▼' }} {{ fmt(Math.abs(liveChange)) }} ({{ Math.abs(liveChangePct).toFixed(2) }}٪)
+              </div>
+            </div>
+          </div>
+
+          <!-- دکمه به‌روزرسانی -->
+          <button class="refresh-fab" @click="loadData" :disabled="refreshing">
+            <span v-if="refreshing" class="btn-spinner dark"></span>
+            <span v-else>🔄</span>
+            {{ refreshing ? '' : 'به‌روزرسانی' }}
+          </button>
+        </div>
+
+        <!-- ── تب معاملات ── -->
+        <div v-show="activeTab === 'trades'">
+          <div class="trades-card">
+            <div class="trades-header">
+              <div class="trades-title">معاملات اخیر ربات</div>
+              <div class="trades-count" v-if="trades.length">{{ trades.length }} معامله</div>
+            </div>
+
+            <div v-if="trades.length === 0" class="trades-empty">
+              <span>📋</span>
+              <p>هنوز معامله‌ای ثبت نشده</p>
+              <small>بعد از اولین روز فعالیت، معاملات اینجا نمایش داده می‌شوند</small>
+            </div>
+
+            <div v-else class="trades-list">
+              <div v-for="t in trades" :key="t.id" class="trade-row">
+                <div class="trade-type-badge" :class="t.type === 'BUY' ? 'buy' : 'sell'">
+                  {{ t.type === 'BUY' ? '↑ خرید' : '↓ فروش' }}
+                </div>
+                <div class="trade-info">
+                  <div class="trade-price">{{ fmt(t.price) }} <span>T/گرم</span></div>
+                  <div class="trade-amount">{{ t.amount }} گرم</div>
+                </div>
+                <div class="trade-right">
+                  <div class="trade-profit" :class="t.profit >= 0 ? 'up' : 'down'">
+                    {{ t.profit >= 0 ? '+' : '' }}{{ fmt(t.profit) }} T
+                  </div>
+                  <div class="trade-time">{{ fmtTime(t.time) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── تب تنظیمات ── -->
+        <div v-show="activeTab === 'settings'">
+          <div class="settings-card">
+            <div class="settings-title">⚙️ تنظیمات ربات</div>
+
+            <!-- وضعیت ربات -->
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">وضعیت ربات</div>
+                <div class="setting-desc">ربات را فعال یا متوقف کنید</div>
+              </div>
+              <div
+                class="toggle-switch"
+                :class="settings.botEnabled ? 'on' : 'off'"
+                @click="toggleBot"
               >
-                <svg v-if="isDemoMode" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41 1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                <svg v-else class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 2.58 4.85L12 22 2 17.13l3.66-3.96-5-4.83z"/>
-                </svg>
-                {{ isDemoMode ? 'حالت دمو' : 'حالت واقعی' }}
-              </button>
-            </div>
-            
-            <!-- Subscription Status -->
-            <div class="text-left status-badge">
-              <div class="text-sm text-yellow-200 mb-1">وضعیت اشتراک</div>
-              <div :class="subscriptionStatus === 'active' ? 'text-green-400' : 'text-red-400'" class="font-bold text-xl flex items-center">
-                <div :class="subscriptionStatus === 'active' ? 'bg-green-500' : 'bg-red-500'" class="status-dot"></div>
-                {{ subscriptionStatus === 'active' ? 'فعال' : 'غیرفعال' }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Subscription Section -->
-      <div v-if="subscriptionStatus !== 'active' && !isDemoMode" class="subscription-card">
-        <!-- Background decoration -->
-        <div class="subscription-bg-decoration top-right"></div>
-        <div class="subscription-bg-decoration bottom-left"></div>
-        
-        <div class="subscription-content">
-          <div class="text-center">
-            <div class="subscription-badge">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-              </svg>
-              شروع کسب سود
-            </div>
-            <h2 class="text-4xl font-bold mb-4">ربات معامله گر هوشمند طلا</h2>
-            <p class="text-xl mb-8 text-yellow-100">با خرید اشتراک، ربات به صورت خودکار برای شما معامله کرده و سود روزانه تضمینی محاسبه می‌کند</p>
-            
-            <div class="subscription-stats-grid">
-              <div class="subscription-stat-card">
-                <div class="stat-value">24%</div>
-                <div class="stat-label">سود تضمینی ماهانه</div>
-                <div class="stat-description">بازگشت سرمایه تضمین شده</div>
-              </div>
-              <div class="subscription-stat-card">
-                <div class="stat-value">0.8%</div>
-                <div class="stat-label">سود روزانه میانگین</div>
-                <div class="stat-description">تا 1.5% در روز</div>
-              </div>
-              <div class="subscription-stat-card">
-                <div class="stat-value">30 روز</div>
-                <div class="stat-label">مدت اشتراک</div>
-                <div class="stat-description">قابل تمدید</div>
+                <div class="toggle-thumb"></div>
               </div>
             </div>
 
-            <button 
-              @click="purchaseSubscription" 
-              :disabled="loading"
-              class="purchase-btn"
-            >
-              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-              </svg>
-              {{ loading ? 'در حال پردازش...' : 'خرید اشتراک (۱,۰۰۰,۰۰۰ تومان)' }}
+            <div class="setting-divider"></div>
+
+            <!-- سرمایه سفارشی -->
+            <div class="setting-row column">
+              <div class="setting-info">
+                <div class="setting-label">سرمایه سفارشی (تومان)</div>
+                <div class="setting-desc">
+                  میزان سرمایه‌ای که ربات با آن کار کند.
+                  صفر = استفاده از سرمایه پیش‌فرض ({{ fmt(stats.currentInvestment) }} تومان)
+                </div>
+              </div>
+              <div class="inv-input-wrap">
+                <input
+                  v-model.number="settings.customInvestment"
+                  type="number"
+                  class="inv-input"
+                  placeholder="مثلاً: 5000000"
+                  min="0"
+                  max="100000000"
+                  step="500000"
+                />
+                <span class="inv-unit">تومان</span>
+              </div>
+            </div>
+
+            <div class="setting-divider"></div>
+
+            <!-- سطح ریسک -->
+            <div class="setting-row column">
+              <div class="setting-info">
+                <div class="setting-label">سطح ریسک</div>
+                <div class="setting-desc">میزان تهاجمی بودن استراتژی معاملاتی ربات</div>
+              </div>
+              <div class="risk-selector">
+                <button
+                  v-for="r in riskOptions"
+                  :key="r.value"
+                  :class="['risk-btn', settings.riskLevel === r.value ? 'active ' + r.value : '']"
+                  @click="settings.riskLevel = r.value"
+                >
+                  {{ r.icon }} {{ r.label }}
+                </button>
+              </div>
+              <div class="risk-desc-box" v-if="selectedRisk">
+                {{ selectedRisk.desc }}
+              </div>
+            </div>
+
+            <div class="setting-divider"></div>
+
+            <!-- دکمه ذخیره -->
+            <button class="save-btn" @click="saveSettings" :disabled="savingSettings">
+              <span v-if="savingSettings" class="btn-spinner dark"></span>
+              {{ savingSettings ? 'در حال ذخیره...' : '💾 ذخیره تنظیمات' }}
             </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bot Dashboard -->
-      <div v-if="subscriptionStatus === 'active' || isDemoMode">
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-          <div class="stat-card stat-card-green">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-green-200 text-sm font-semibold">سرمایه فعلی</span>
-              <div class="stat-icon-wrapper stat-icon-green">
-                <svg class="w-5 h-5 text-green-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-              </div>
-            </div>
-            <div class="text-3xl font-bold text-white mb-2">{{ formatCurrency(botStats.currentInvestment) }}</div>
-            <div class="text-green-200 text-sm">مبلغ سرمایه‌گذاری شده</div>
-          </div>
-          
-          <div class="stat-card stat-card-blue">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-blue-200 text-sm font-semibold">سود امروز</span>
-              <div class="stat-icon-wrapper stat-icon-blue">
-                <svg class="w-5 h-5 text-blue-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
-                </svg>
-              </div>
-            </div>
-            <div class="text-3xl font-bold text-white mb-2">{{ formatCurrency(botStats.todayProfit) }}</div>
-            <div class="text-blue-200 text-sm">سود کسب شده امروز</div>
-          </div>
-          
-          <div class="stat-card stat-card-purple">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-purple-200 text-sm font-semibold">سود کل</span>
-              <div class="stat-icon-wrapper stat-icon-purple">
-                <svg class="w-5 h-5 text-purple-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
-                </svg>
-              </div>
-            </div>
-            <div class="text-3xl font-bold text-white mb-2">{{ formatCurrency(botStats.totalProfit) }}</div>
-            <div class="text-purple-200 text-sm">مجموع سودها</div>
-          </div>
-          
-          <div class="stat-card stat-card-orange">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-orange-200 text-sm font-semibold">تعداد معاملات</span>
-              <div class="stat-icon-wrapper stat-icon-orange">
-                <svg class="w-5 h-5 text-orange-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
-                </svg>
-              </div>
-            </div>
-            <div class="text-3xl font-bold text-white mb-2">{{ botStats.totalTrades }}</div>
-            <div class="text-orange-200 text-sm">معاملات انجام شده</div>
+            <div v-if="settingsMsg" class="settings-msg" :class="settingsMsgType">{{ settingsMsg }}</div>
           </div>
         </div>
 
-        <!-- Bot Activity -->
-        <div class="bot-activity-section">
-          <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <h3 class="text-2xl font-bold text-white flex items-center">
-              <div class="stat-icon-wrapper stat-icon-green ml-3">
-                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-              </div>
-              فعالیت امروز ربات
-            </h3>
-            <div class="text-sm text-gray-400">
-              آخرین آپدیت: {{ formatTime(lastUpdate) }}
-            </div>
-          </div>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between p-4 bg-white/10 backdrop-blur rounded-xl border border-white/20 flex-wrap gap-4">
-              <div class="flex items-center">
-                <div class="status-dot bg-green-500 ml-3"></div>
-                <div>
-                  <div class="font-semibold">ربات فعال است</div>
-                  <div class="text-sm text-gray-500">در حال تحلیل بازار و اجرای معاملات</div>
-                </div>
-              </div>
-              <div class="text-left">
-                <div class="text-sm text-gray-500">آخرین به‌روزرسانی</div>
-                <div class="font-semibold">{{ formatTime(lastUpdate) }}</div>
-              </div>
-            </div>
-
-            <div class="price-cards-grid">
-              <div class="price-card price-card-high">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-green-800 font-semibold">بیشترین قیمت امروز</span>
-                  <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M7 14l5-5 5 5z"/>
-                  </svg>
-                </div>
-                <div class="text-2xl font-bold text-green-700">{{ formatPrice(todayPrices.high) }}</div>
-              </div>
-
-              <div class="price-card price-card-low">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-red-800 font-semibold">کمترین قیمت امروز</span>
-                  <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M7 10l5 5 5-5z"/>
-                  </svg>
-                </div>
-                <div class="text-2xl font-bold text-red-700">{{ formatPrice(todayPrices.low) }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Trades -->
-        <div class="trades-section">
-          <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
-            <h3 class="text-xl font-bold text-gray-900">معاملات اخیر</h3>
-            <button @click="refreshTrades" class="text-blue-600 hover:text-blue-700 font-semibold transition-colors">
-              تازه سازی
-            </button>
-          </div>
-          
-          <div class="trades-table">
-            <table class="w-full">
-              <thead>
-                <tr class="border-b">
-                  <th class="text-right py-3 px-4 text-gray-600">زمان</th>
-                  <th class="text-right py-3 px-4 text-gray-600">نوع</th>
-                  <th class="text-right py-3 px-4 text-gray-600">قیمت</th>
-                  <th class="text-right py-3 px-4 text-gray-600">مقدار</th>
-                  <th class="text-right py-3 px-4 text-gray-600">سود</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="trade in recentTrades" :key="trade.id" class="border-b hover:bg-gray-50 transition-colors">
-                  <td class="py-3 px-4">{{ formatTime(trade.time) }}</td>
-                  <td class="py-3 px-4">
-                    <span :class="trade.type === 'BUY' ? 'trade-type-buy' : 'trade-type-sell'" 
-                          class="trade-type-badge">
-                      {{ trade.type === 'BUY' ? 'خرید' : 'فروش' }}
-                    </span>
-                  </td>
-                  <td class="py-3 px-4">{{ formatPrice(trade.price) }}</td>
-                  <td class="py-3 px-4">{{ trade.amount }} گرم</td>
-                  <td class="py-3 px-4">
-                    <span :class="trade.profit >= 0 ? 'text-green-600' : 'text-red-600'" class="font-semibold">
-                      {{ formatCurrency(trade.profit) }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -255,751 +308,660 @@
 
 <script>
 import axios from 'axios';
+const API = process.env.VUE_APP_API_URL || '';
 
 export default {
   name: 'TradingBot',
   data() {
     return {
-      subscriptionStatus: 'inactive',
-      botStats: {
-        currentInvestment: 0,
-        todayProfit: 0,
-        totalProfit: 0,
-        totalTrades: 0
+      loading: true,
+      purchasing: false,
+      buyError: '',
+      refreshing: false,
+      savingSettings: false,
+      settingsMsg: '',
+      settingsMsgType: 'ok',
+      subStatus: 'inactive',
+      livePrice: 0,
+      liveChange: 0,
+      liveChangePct: 0,
+      stats: {},
+      trades: [],
+      activeTab: 'stats',
+      settings: {
+        botEnabled: true,
+        customInvestment: 0,
+        riskLevel: 'medium',
       },
-      todayPrices: {
-        high: 0,
-        low: 0
-      },
-      lastUpdate: new Date(),
-      recentTrades: [],
-      loading: false,
-      isDemoMode: false // حالت دمو پیش‌فرض خاموش
+      riskOptions: [
+        { value: 'low',    icon: '🟢', label: 'محافظه‌کار', desc: 'معاملات کمتر، سود پایدارتر و ریسک کمتر. مناسب برای سرمایه‌گذاران محتاط.' },
+        { value: 'medium', icon: '🟡', label: 'متعادل',     desc: 'تعادل بین ریسک و سود. پیش‌فرض و توصیه‌شده برای اکثر کاربران.' },
+        { value: 'high',   icon: '🔴', label: 'تهاجمی',     desc: 'معاملات بیشتر با پتانسیل سود بالاتر و ریسک بیشتر. برای کاربران حرفه‌ای.' },
+      ],
+      refreshTimer: null,
+    };
+  },
+  computed: {
+    selectedRisk() {
+      return this.riskOptions.find(r => r.value === this.settings.riskLevel);
     }
   },
   async mounted() {
-    await this.checkSubscription();
-    // اگر اشتراک فعال بود یا حالت دمو فعال بود، داده‌ها رو بارگذاری کن
-    if (this.subscriptionStatus === 'active' || this.isDemoMode) {
-      await this.loadBotData();
-      this.startRealTimeUpdates();
-    }
+    await this.init();
+    this.refreshTimer = setInterval(this.refreshLive, 60000);
+  },
+  beforeUnmount() {
+    clearInterval(this.refreshTimer);
   },
   methods: {
-    // سوئیچ بین حالت واقعی و دمو
-    toggleDemoMode() {
-      this.isDemoMode = !this.isDemoMode;
-      
-      // بارگذاری مجدد داده‌ها با حالت جدید
-      if (this.subscriptionStatus === 'active') {
-        if (this.isDemoMode) {
-          this.loadDemoData();
-        } else {
-          this.loadBotData();
-        }
-      }
-      
-      // نمایش پیام به کاربر
-      if (this.$swal) {
-        this.$swal.fire({
-          title: 'تغییر حالت',
-          text: this.isDemoMode ? 'حالت دمو فعال شد' : 'حالت واقعی فعال شد',
-          icon: 'info',
-          confirmButtonText: 'باشه',
-          timer: 2000
-        });
-      }
-    },
-    
-    async checkSubscription() {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          this.$router.push('/login');
-          return;
-        }
-        
-        // اگر حالت دمو فعال باشه، از API دمو استفاده کن
-        const apiPath = this.isDemoMode ? '/bot/demo' : '/bot';
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}${apiPath}/subscription`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        this.subscriptionStatus = response.data.status;
-      } catch (error) {
-        console.error('Error checking subscription:', error);
-        this.subscriptionStatus = 'inactive';
-        // اگر خطای 404 بود، از حالت مخالف استفاده کن
-        if (error.response?.status === 404) {
-          if (this.isDemoMode) {
-            this.checkRealSubscription();
-          } else {
-            this.checkDemoSubscription();
-          }
-        }
-      }
-    },
-    
-    // بررسی اشتراک واقعی
-    async checkRealSubscription() {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/bot/subscription`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        this.subscriptionStatus = response.data.status;
-      } catch (error) {
-        console.error('Error checking real subscription:', error);
-        this.subscriptionStatus = 'inactive';
-      }
-    },
-    
-    // بررسی اشتراک دمو
-    async checkDemoSubscription() {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/bot/demo/subscription`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        this.subscriptionStatus = response.data.status;
-      } catch (error) {
-        console.error('Error checking demo subscription:', error);
-        this.subscriptionStatus = 'inactive';
-      }
-    },
-    
-    async purchaseSubscription() {
+    token() { return localStorage.getItem('token'); },
+    headers() { return { Authorization: `Bearer ${this.token()}` }; },
+
+    async init() {
       this.loading = true;
+      if (!this.token()) { this.$router.push('/login'); return; }
+      await this.checkSub();
+      if (this.subStatus === 'active') {
+        await Promise.all([this.loadData(), this.loadSettings()]);
+      }
+      await this.refreshLive();
+      this.loading = false;
+    },
+
+    async checkSub() {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.post(`${process.env.VUE_APP_API_URL}/bot/purchase`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (response.data.success) {
-          this.subscriptionStatus = 'active';
-          await this.loadBotData();
-          this.startRealTimeUpdates();
-          if (this.$swal) {
-            await this.$swal.fire({
-              title: 'موفقیت!',
-              text: 'اشتراک ربات با موفقیت فعال شد',
-              icon: 'success',
-              confirmButtonText: 'باشه'
-            });
-          } else {
-            alert('اشتراک ربات با موفقیت فعال شد');
-          }
-        }
-      } catch (error) {
-        console.error('Purchase error:', error);
-        // اگر خطای 404 بود، از API دمو استفاده کن
-        if (error.response?.status === 404) {
-          await this.purchaseDemoSubscription();
-          return;
-        }
-        
-        const errorMsg = error.response?.data?.error || 'خطا در خرید اشتراک';
-        if (this.$swal) {
-          await this.$swal.fire({
-            title: 'خطا!',
-            text: errorMsg,
-            icon: 'error',
-            confirmButtonText: 'باشه'
-          });
-        } else {
-          alert(errorMsg);
-        }
+        const r = await axios.get(`${API}/bot/subscription`, { headers: this.headers() });
+        this.subStatus = r.data.status;
+      } catch { this.subStatus = 'inactive'; }
+    },
+
+    async loadData() {
+      this.refreshing = true;
+      try {
+        const [statsR, tradesR] = await Promise.all([
+          axios.get(`${API}/bot/stats`, { headers: this.headers() }),
+          axios.get(`${API}/bot/trades`, { headers: this.headers() }),
+        ]);
+        this.stats = statsR.data;
+        this.trades = tradesR.data || [];
+      } catch (e) {
+        console.error('loadData error:', e.message);
       } finally {
-        this.loading = false;
+        this.refreshing = false;
       }
     },
-    
-    // خرید اشتراک دمو (رایگان)
-    async purchaseDemoSubscription() {
+
+    async loadSettings() {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.post(`${process.env.VUE_APP_API_URL}/bot/demo/purchase`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (response.data.success) {
-          this.subscriptionStatus = 'active';
-          await this.loadDemoData();
-          this.startRealTimeUpdates();
-          if (this.$swal) {
-            await this.$swal.fire({
-              title: 'موفقیت!',
-              text: 'اشتراک دمو با موفقیت فعال شد (رایگان)',
-              icon: 'success',
-              confirmButtonText: 'باشه'
-            });
-          } else {
-            alert('اشتراک دمو با موفقیت فعال شد (رایگان)');
-          }
-        }
-      } catch (error) {
-        console.error('Demo purchase error:', error);
-        const errorMsg = error.response?.data?.error || 'خطا در فعال‌سازی اشتراک دمو';
-        if (this.$swal) {
-          await this.$swal.fire({
-            title: 'خطا!',
-            text: errorMsg,
-            icon: 'error',
-            confirmButtonText: 'باشه'
-          });
-        } else {
-          alert(errorMsg);
-        }
-      }
+        const r = await axios.get(`${API}/bot/settings`, { headers: this.headers() });
+        this.settings.botEnabled = r.data.botEnabled !== false;
+        this.settings.customInvestment = r.data.customInvestment || 0;
+        this.settings.riskLevel = r.data.riskLevel || 'medium';
+      } catch { /* silent */ }
     },
-    
-    async loadBotData() {
-      // اگر اشتراک فعال نبود ولی حالت دمو فعال بود، از API دمو استفاده کن
-      if (this.subscriptionStatus !== 'active' && !this.isDemoMode) return;
-      
+
+    async saveSettings() {
+      this.savingSettings = true;
+      this.settingsMsg = '';
       try {
-        const token = localStorage.getItem('token');
-        
-        // انتخاب API بر اساس حالت
-        const apiPath = this.isDemoMode ? '/bot/demo' : '/bot';
-        
-        const [statsRes, tradesRes, pricesRes] = await Promise.all([
-          axios.get(`${process.env.VUE_APP_API_URL}${apiPath}/stats`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          axios.get(`${process.env.VUE_APP_API_URL}${apiPath}/trades`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          axios.get(`${process.env.VUE_APP_API_URL}${apiPath}/prices`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        ]);
-        
-        this.botStats = statsRes.data;
-        this.recentTrades = tradesRes.data || [];
-        this.todayPrices = pricesRes.data || { high: 0, low: 0 };
-        this.lastUpdate = new Date();
-      } catch (error) {
-        console.error('Error loading bot data:', error);
-        // اگر خطای 404 بود، از API دمو استفاده کن
-        if (error.response?.status === 404) {
-          this.loadDemoData();
-        }
+        await axios.put(`${API}/bot/settings`, {
+          botEnabled: this.settings.botEnabled,
+          customInvestment: this.settings.customInvestment,
+          riskLevel: this.settings.riskLevel,
+        }, { headers: this.headers() });
+        this.settingsMsg = '✅ تنظیمات با موفقیت ذخیره شد';
+        this.settingsMsgType = 'ok';
+        // reload stats to reflect new investment
+        await this.loadData();
+        setTimeout(() => { this.settingsMsg = ''; }, 3000);
+      } catch (e) {
+        this.settingsMsg = e.response?.data?.error || '❌ خطا در ذخیره تنظیمات';
+        this.settingsMsgType = 'err';
+      } finally {
+        this.savingSettings = false;
       }
     },
-    
-    // بارگذاری داده‌های دمو در صورت خطا
-    async loadDemoData() {
+
+    toggleBot() {
+      this.settings.botEnabled = !this.settings.botEnabled;
+    },
+
+    async refreshLive() {
       try {
-        const token = localStorage.getItem('token');
-        const [statsRes, tradesRes, pricesRes] = await Promise.all([
-          axios.get(`${process.env.VUE_APP_API_URL}/bot/demo/stats`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          axios.get(`${process.env.VUE_APP_API_URL}/bot/demo/trades`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          axios.get(`${process.env.VUE_APP_API_URL}/bot/demo/prices`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        ]);
-        
-        this.botStats = statsRes.data;
-        this.recentTrades = tradesRes.data || [];
-        this.todayPrices = pricesRes.data || { high: 0, low: 0 };
-        this.lastUpdate = new Date();
-      } catch (error) {
-        console.error('Error loading demo data:', error);
+        const r = await axios.get(`${API}/bot/current-price`, { headers: this.headers() });
+        this.livePrice = r.data.price;
+        this.liveChange = r.data.change;
+        this.liveChangePct = r.data.changePercent;
+      } catch { /* silent */ }
+    },
+
+    async purchase() {
+      this.purchasing = true;
+      this.buyError = '';
+      try {
+        const r = await axios.post(`${API}/bot/purchase`, {}, { headers: this.headers() });
+        if (r.data.success) {
+          this.subStatus = 'active';
+          await Promise.all([this.loadData(), this.loadSettings()]);
+        }
+      } catch (e) {
+        this.buyError = e.response?.data?.error || 'خطا در خرید اشتراک';
+      } finally {
+        this.purchasing = false;
       }
     },
-    
-    startRealTimeUpdates() {
-      setInterval(() => {
-        this.loadBotData();
-      }, 30000); // Update every 30 seconds
+
+    fmt(v) {
+      if (!v && v !== 0) return '—';
+      return Number(v).toLocaleString('fa-IR');
     },
-    
-    refreshTrades() {
-      this.loadBotData();
+    fmtTime(t) {
+      if (!t) return '—';
+      return new Date(t).toLocaleString('fa-IR', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
     },
-    
-    formatCurrency(amount) {
-      if (!amount) return '0 تومان';
-      return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان';
-    },
-    
-    formatPrice(price) {
-      if (!price) return '0 تومان/گرم';
-      return new Intl.NumberFormat('fa-IR').format(price) + ' تومان/گرم';
-    },
-    
-    formatTime(time) {
-      if (!time) return '--:--';
-      return new Date(time).toLocaleTimeString('fa-IR');
-    }
   }
-}
+};
 </script>
 
 <style scoped>
-/* Trading Bot Page - Modern Mobile-First Design */
-.trading-bot-container {
+/* ─── base ─────────────────────────────────── */
+.bot-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
-  padding: 1rem;
+  background: #080d0b;
+  font-family: inherit;
 }
 
-@media (max-width: 640px) {
-  .trading-bot-container {
-    padding: 0.75rem;
-    padding-bottom: 100px;
-  }
-}
-
-/* Header Section */
-.bot-header {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(249, 115, 22, 0.1) 50%, rgba(239, 68, 68, 0.1) 100%);
-  backdrop-filter: blur(16px);
-  border-radius: 24px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid rgba(234, 179, 8, 0.2);
-  box-shadow: 0 8px 32px rgba(234, 179, 8, 0.1);
-}
-
-@media (max-width: 640px) {
-  .bot-header {
-    padding: 1rem;
-    border-radius: 20px;
-  }
-  
-  .bot-header h1 {
-    font-size: 1.25rem !important;
-  }
-  
-  .bot-header p {
-    font-size: 0.875rem !important;
-  }
-}
-
-.bot-icon-wrapper {
-  width: 2.5rem;
-  height: 2.5rem;
-  background: linear-gradient(135deg, #fbbf24, #f97316);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 0.75rem;
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
-}
-
-@media (max-width: 640px) {
-  .bot-icon-wrapper {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 10px;
-  }
-  
-  .bot-icon-wrapper svg {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-}
-
-/* Status Badges */
-.status-badge {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
-  padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.status-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 9999px;
-  margin-left: 0.5rem;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* Subscription Card */
-.subscription-card {
-  background: linear-gradient(135deg, #eab308, #f97316, #ef4444);
-  border-radius: 24px;
-  padding: 2rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(234, 179, 8, 0.3);
-}
-
-@media (max-width: 640px) {
-  .subscription-card {
-    padding: 1.5rem;
-    border-radius: 20px;
-  }
-  
-  .subscription-card h2 {
-    font-size: 1.5rem !important;
-  }
-  
-  .subscription-card p {
-    font-size: 0.875rem !important;
-  }
-}
-
-.subscription-bg-decoration {
-  position: absolute;
-  width: 16rem;
-  height: 16rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
-  filter: blur(64px);
-}
-
-.subscription-bg-decoration.top-right {
+/* ─── topbar ────────────────────────────────── */
+.bot-topbar {
+  position: sticky;
   top: 0;
-  right: 0;
+  z-index: 50;
+  background: rgba(8,13,11,0.95);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(185,241,207,0.08);
 }
-
-.subscription-bg-decoration.bottom-left {
-  bottom: 0;
-  left: 0;
-}
-
-.subscription-content {
-  position: relative;
-  z-index: 10;
-}
-
-.subscription-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  border-radius: 9999px;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.subscription-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-@media (max-width: 768px) {
-  .subscription-stats-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-.subscription-stat-card {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  border-radius: 16px;
-  padding: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-align: center;
-  transition: all 0.3s ease;
-}
-
-.subscription-stat-card:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-4px);
-}
-
-@media (max-width: 640px) {
-  .subscription-stat-card {
-    padding: 1rem;
-  }
-  
-  .subscription-stat-card .stat-value {
-    font-size: 2.5rem !important;
-  }
-}
-
-.stat-value {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.stat-label {
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.stat-description {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.8);
-  margin-top: 0.5rem;
-}
-
-.purchase-btn {
-  background: white;
-  color: #ea580c;
-  padding: 1rem 3rem;
-  border-radius: 16px;
-  font-weight: 700;
-  font-size: 1.25rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+.bot-topbar-inner {
+  max-width: 640px;
   margin: 0 auto;
-}
-
-.purchase-btn:hover:not(:disabled) {
-  background: #fef3c7;
-  transform: scale(1.05);
-  box-shadow: 0 12px 32px rgba(255, 255, 255, 0.3);
-}
-
-.purchase-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (max-width: 640px) {
-  .purchase-btn {
-    padding: 0.875rem 2rem;
-    font-size: 1rem;
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-/* Stats Cards Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-@media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-.stat-card {
-  backdrop-filter: blur(16px);
-  border-radius: 20px;
-  padding: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
-}
-
-@media (max-width: 640px) {
-  .stat-card {
-    padding: 1rem;
-  }
-  
-  .stat-card .stat-value {
-    font-size: 1.5rem !important;
-  }
-}
-
-.stat-card-green {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-.stat-card-blue {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2));
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
-.stat-card-purple {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
-  border-color: rgba(168, 85, 247, 0.3);
-}
-
-.stat-card-orange {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(239, 68, 68, 0.2));
-  border-color: rgba(249, 115, 22, 0.3);
-}
-
-.stat-icon-wrapper {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 8px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.bot-topbar-left  { display: flex; align-items: center; gap: 8px; }
+.bot-topbar-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.bot-logo {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #ffd26a, #f97316);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  color: #1a1305;
+  flex-shrink: 0;
+}
+.bot-logo svg { width: 15px; height: 15px; }
+
+.bot-topbar-title { font-size: 14px; font-weight: 800; color: #fff; }
+.bot-topbar-sub   { font-size: 10px; color: rgba(255,255,255,.4); }
+
+.live-badge {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 7px;
+  padding: 4px 8px;
+  font-size: 11px; font-weight: 700; color: #ffd47a;
+}
+.live-val { font-size: 11px; }
+.live-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #4ade80; box-shadow: 0 0 4px #4ade80;
+  animation: blink 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.live-unit { font-size: 9px; color: rgba(255,255,255,.3); font-weight: 400; }
+.live-pct  { font-size: 10px; font-weight: 700; }
+.live-pct.up   { color: #4ade80; }
+.live-pct.down { color: #f87171; }
+
+.sub-pill {
+  display: flex; align-items: center; gap: 4px;
+  border-radius: 20px; padding: 3px 8px;
+  font-size: 11px; font-weight: 700;
+}
+.sub-pill.active   { background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.25); }
+.sub-pill.inactive { background: rgba(248,113,113,.12); color: #f87171; border: 1px solid rgba(248,113,113,.25); }
+.sub-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.sub-text { display: none; }
+@media(min-width: 380px) { .sub-text { display: inline; } }
+
+/* ─── body ──────────────────────────────────── */
+.bot-body {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px 12px 80px;
 }
 
-.stat-icon-green { background: rgba(34, 197, 94, 0.3); }
-.stat-icon-blue { background: rgba(59, 130, 246, 0.3); }
-.stat-icon-purple { background: rgba(168, 85, 247, 0.3); }
-.stat-icon-orange { background: rgba(249, 115, 22, 0.3); }
+/* ─── loader ────────────────────────────────── */
+.bot-loader {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; min-height: 60vh; color: rgba(255,255,255,.4); font-size: 14px;
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid rgba(255,210,106,.15);
+  border-top-color: #ffd26a;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* Bot Activity Section */
-.bot-activity-section {
-  background: linear-gradient(135deg, rgba(22, 27, 34, 0.8), rgba(13, 17, 23, 0.8));
-  backdrop-filter: blur(16px);
-  border-radius: 24px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+/* ─── purchase ──────────────────────────────── */
+.purchase-area {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 75vh;
+}
+.purchase-glow {
+  position: absolute;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(255,210,106,.07), transparent 70%);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.purchase-card {
+  background: linear-gradient(160deg, #111a13, #0e1710);
+  border: 1px solid rgba(255,196,76,.2);
+  border-radius: 22px;
+  padding: 28px 20px;
+  text-align: center;
+  width: 100%;
+  position: relative; z-index: 1;
+  box-shadow: 0 20px 50px rgba(0,0,0,.5);
+}
+.purchase-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.purchase-title { font-size: 1.35rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+.purchase-desc  { font-size: 13px; color: rgba(255,255,255,.5); line-height: 1.8; margin-bottom: 20px; }
+
+.features-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 6px;
+  margin-bottom: 20px;
+}
+.feature-item {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px; padding: 10px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.f-icon  { font-size: 1.3rem; }
+.f-label { font-size: 10px; color: rgba(255,255,255,.5); line-height: 1.5; }
+.f-label b { display: block; color: #ffd47a; font-size: 11px; }
+
+.price-tag {
+  background: rgba(255,196,76,.08);
+  border: 1px solid rgba(255,196,76,.2);
+  border-radius: 10px; padding: 12px;
+  margin-bottom: 16px;
+}
+.price-amount { font-size: 1.5rem; font-weight: 800; color: #ffd47a; }
+.price-unit   { font-size: 12px; color: rgba(255,255,255,.4); margin-right: 6px; }
+
+.buy-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #ffd26a, #f97316);
+  color: #1a1305; font-size: 15px; font-weight: 800;
+  padding: 14px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: all .25s;
+  box-shadow: 0 8px 22px rgba(255,210,106,.22);
+}
+.buy-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,210,106,.33); }
+.buy-btn:disabled { opacity:.6; cursor:not-allowed; }
+.buy-error { margin-top: 8px; font-size: 13px; color: #f87171; }
+
+/* ─── tab bar ───────────────────────────────── */
+.tab-bar {
+  display: flex; gap: 6px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 5px;
+  margin-bottom: 14px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 10px;
+  font-size: 12px; font-weight: 700;
+  color: rgba(255,255,255,.4);
+  background: transparent;
+  transition: all .2s;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: rgba(255,210,106,.12);
+  color: #ffd47a;
+  border: 1px solid rgba(255,210,106,.2);
 }
 
-@media (max-width: 640px) {
-  .bot-activity-section {
-    padding: 1rem;
-    border-radius: 20px;
-  }
+/* ─── dashboard ─────────────────────────────── */
+.dashboard { display: flex; flex-direction: column; gap: 0; }
+
+/* paused banner */
+.paused-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(248,113,113,.08);
+  border: 1px solid rgba(248,113,113,.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 13px; color: rgba(255,255,255,.7);
+}
+.paused-banner span { font-size: 1.5rem; flex-shrink: 0; }
+.paused-banner div { flex: 1; }
+.paused-banner b { display: block; color: #f87171; font-size: 13px; margin-bottom: 2px; }
+.paused-banner p { font-size: 11px; margin: 0; color: rgba(255,255,255,.4); }
+.go-settings-btn {
+  background: rgba(248,113,113,.15); border: 1px solid rgba(248,113,113,.25);
+  color: #f87171; font-size: 12px; font-weight: 700;
+  padding: 5px 10px; border-radius: 8px; white-space: nowrap; cursor: pointer;
 }
 
-.price-cards-grid {
+/* stats row */
+.stats-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  gap: 10px;
+  margin-bottom: 12px;
 }
+@media(min-width: 480px) { .stats-row { grid-template-columns: repeat(4, 1fr); } }
 
-@media (max-width: 640px) {
-  .price-cards-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.price-card {
-  padding: 1rem;
-  border-radius: 12px;
-  border: 1px solid;
-}
-
-.price-card-high {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-.price-card-low {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-/* Trades Table */
-.trades-section {
-  background: white;
+.stat-box {
   border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 14px 12px;
+  border: 1px solid;
+  position: relative;
+  overflow: hidden;
+}
+.stat-box.green  { background: rgba(74,222,128,.07);  border-color: rgba(74,222,128,.2);  }
+.stat-box.gold   { background: rgba(255,210,106,.07); border-color: rgba(255,210,106,.2); }
+.stat-box.purple { background: rgba(168,85,247,.07);  border-color: rgba(168,85,247,.2);  }
+.stat-box.blue   { background: rgba(96,165,250,.07);  border-color: rgba(96,165,250,.2);  }
+
+.stat-icon { font-size: 1.2rem; margin-bottom: 6px; }
+.stat-val  { font-size: 1rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 3px; word-break: break-all; }
+.stat-lbl  { font-size: 10px; color: rgba(255,255,255,.4); }
+.stat-pct  {
+  position: absolute; top: 10px; left: 10px;
+  font-size: 10px; font-weight: 700;
+  background: rgba(255,210,106,.15); color: #ffd47a;
+  padding: 2px 6px; border-radius: 20px;
 }
 
-@media (max-width: 640px) {
-  .trades-section {
-    padding: 1rem;
-    border-radius: 12px;
-  }
+/* market card */
+.market-card {
+  background: linear-gradient(160deg, #0f1a12, #0c1510);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.market-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 6px;
+  margin-bottom: 14px;
+}
+.market-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 700; color: #fff;
+}
+.market-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #ffd26a; box-shadow: 0 0 5px #ffd26a;
+}
+.market-note { font-size: 10px; color: rgba(255,255,255,.28); }
+
+.market-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 7px; margin-bottom: 14px;
+}
+@media(min-width: 400px) { .market-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.market-item {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px; padding: 10px;
+  text-align: center;
+}
+.mi-label { font-size: 9px; color: rgba(255,255,255,.38); margin-bottom: 4px; }
+.mi-val   { font-size: 12px; font-weight: 800; color: #e8f5e9; }
+.mi-val.high { color: #4ade80; }
+.mi-val.low  { color: #f87171; }
+
+.market-no-data {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px; font-size: 12px; color: rgba(255,255,255,.32);
+  background: rgba(255,255,255,.03); border-radius: 10px;
+  margin-bottom: 14px;
 }
 
-.trades-table {
+.live-row {
+  background: rgba(255,196,76,.06);
+  border: 1px solid rgba(255,196,76,.14);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.live-label    { font-size: 10px; color: rgba(255,255,255,.38); margin-bottom: 3px; }
+.live-price-big { font-size: 1.2rem; font-weight: 800; color: #ffd47a; display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+.live-price-big span { font-size: 11px; color: rgba(255,255,255,.35); font-weight: 400; }
+.live-refresh-note { font-size: 9px; color: rgba(255,255,255,.25); }
+.live-change-big  { font-size: 12px; font-weight: 700; margin-top: 2px; }
+.live-change-big.up   { color: #4ade80; }
+.live-change-big.down { color: #f87171; }
+
+/* refresh fab */
+.refresh-fab {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   width: 100%;
-  overflow-x: auto;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  color: rgba(255,255,255,.5);
+  font-size: 13px; font-weight: 600;
+  padding: 11px;
+  transition: all .2s; cursor: pointer;
+  margin-bottom: 4px;
 }
+.refresh-fab:hover:not(:disabled) { color: #ffd47a; border-color: rgba(255,196,76,.3); }
+.refresh-fab:disabled { opacity:.5; cursor:not-allowed; }
 
-.trades-table th {
-  text-align: right;
-  padding: 0.75rem 1rem;
-  color: #6b7280;
-  font-size: 0.875rem;
-  white-space: nowrap;
+/* ─── trades ────────────────────────────────── */
+.trades-card {
+  background: linear-gradient(160deg, #0f1a12, #0c1510);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 18px;
+  padding: 16px;
 }
+.trades-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.trades-title { font-size: 13px; font-weight: 700; color: #fff; }
+.trades-count { font-size: 11px; color: rgba(255,255,255,.35); background: rgba(255,255,255,.06); padding: 2px 8px; border-radius: 20px; }
 
-.trades-table td {
-  padding: 0.75rem 1rem;
-  white-space: nowrap;
+.trades-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 28px; color: rgba(255,255,255,.28); font-size: 13px;
 }
+.trades-empty span { font-size: 1.8rem; }
+.trades-empty p    { margin: 0; }
+.trades-empty small{ font-size: 11px; color: rgba(255,255,255,.2); text-align:center; }
 
-@media (max-width: 640px) {
-  .trades-table th,
-  .trades-table td {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.75rem;
-  }
+.trades-list { display: flex; flex-direction: column; gap: 7px; }
+
+.trade-row {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 11px;
+  padding: 10px 12px;
+  transition: all .18s;
 }
+.trade-row:hover { background: rgba(255,255,255,.05); }
 
 .trade-type-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px; border-radius: 7px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.trade-type-badge.buy  { background: rgba(74,222,128,.12); color: #4ade80; }
+.trade-type-badge.sell { background: rgba(248,113,113,.12); color: #f87171; }
+
+.trade-info { flex: 1; min-width: 0; }
+.trade-price  { font-size: 12px; font-weight: 700; color: #e8f5e9; }
+.trade-price span { font-size: 9px; color: rgba(255,255,255,.3); font-weight: 400; }
+.trade-amount { font-size: 10px; color: rgba(255,255,255,.38); margin-top: 1px; }
+
+.trade-right { text-align: left; flex-shrink: 0; }
+.trade-profit { font-size: 12px; font-weight: 700; }
+.trade-profit.up   { color: #4ade80; }
+.trade-profit.down { color: #f87171; }
+.trade-time { font-size: 9px; color: rgba(255,255,255,.28); margin-top: 1px; }
+
+/* ─── settings ──────────────────────────────── */
+.settings-card {
+  background: linear-gradient(160deg, #0f1a12, #0c1510);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 18px;
+  padding: 18px 16px;
+}
+.settings-title {
+  font-size: 14px; font-weight: 800; color: #fff;
+  margin-bottom: 18px;
 }
 
-.trade-type-buy {
-  background: rgba(34, 197, 94, 0.1);
-  color: #166534;
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+}
+.setting-row.column { flex-direction: column; align-items: stretch; gap: 10px; }
+
+.setting-info { flex: 1; min-width: 0; }
+.setting-label { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.setting-desc  { font-size: 11px; color: rgba(255,255,255,.38); line-height: 1.6; }
+
+.setting-divider { height: 1px; background: rgba(255,255,255,.06); margin: 4px 0; }
+
+/* toggle switch */
+.toggle-switch {
+  width: 46px; height: 26px;
+  border-radius: 13px;
+  position: relative;
+  cursor: pointer;
+  transition: background .25s;
+  flex-shrink: 0;
+}
+.toggle-switch.on  { background: rgba(74,222,128,.3); border: 1px solid rgba(74,222,128,.4); }
+.toggle-switch.off { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); }
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  transition: all .25s;
+}
+.toggle-switch.on  .toggle-thumb { right: 4px; background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,.5); }
+.toggle-switch.off .toggle-thumb { right: 22px; background: rgba(255,255,255,.35); }
+
+/* investment input */
+.inv-input-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: 0 12px;
+}
+.inv-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 0;
+  direction: ltr;
+  text-align: left;
+}
+.inv-input::placeholder { color: rgba(255,255,255,.25); font-weight: 400; }
+.inv-unit { font-size: 12px; color: rgba(255,255,255,.35); }
+
+/* risk selector */
+.risk-selector {
+  display: flex; gap: 6px;
+}
+.risk-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 10px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.5);
+  cursor: pointer;
+  transition: all .2s;
+}
+.risk-btn.active.low    { background: rgba(74,222,128,.12);  border-color: rgba(74,222,128,.3);  color: #4ade80; }
+.risk-btn.active.medium { background: rgba(250,204,21,.12);  border-color: rgba(250,204,21,.3);  color: #facc15; }
+.risk-btn.active.high   { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.3); color: #f87171; }
+
+.risk-desc-box {
+  font-size: 11px; color: rgba(255,255,255,.4);
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.6;
 }
 
-.trade-type-sell {
-  background: rgba(239, 68, 68, 0.1);
-  color: #991b1b;
+/* save button */
+.save-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff; font-size: 14px; font-weight: 800;
+  padding: 13px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin-top: 14px;
+  transition: all .25s;
+  box-shadow: 0 6px 18px rgba(34,197,94,.2);
+  cursor: pointer;
+}
+.save-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(34,197,94,.28); }
+.save-btn:disabled { opacity:.6; cursor:not-allowed; }
+
+.btn-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+.btn-spinner.dark {
+  border: 2px solid rgba(0,0,0,.2);
+  border-top-color: rgba(0,0,0,.6);
 }
 
-/* Animations */
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.settings-msg {
+  margin-top: 10px;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px;
+  border-radius: 8px;
 }
-
-.stat-card,
-.subscription-stat-card,
-.bot-activity-section {
-  animation: slideUp 0.5s ease-out;
-}
-
-/* Scrollbar Styling */
-.trades-table::-webkit-scrollbar {
-  height: 6px;
-}
-
-.trades-table::-webkit-scrollbar-track {
-  background: #f3f4f6;
-  border-radius: 3px;
-}
-
-.trades-table::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-}
-
-.trades-table::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
+.settings-msg.ok  { color: #4ade80; background: rgba(74,222,128,.08); }
+.settings-msg.err { color: #f87171; background: rgba(248,113,113,.08); }
 </style>

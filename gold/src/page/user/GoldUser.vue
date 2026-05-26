@@ -229,10 +229,15 @@ async function submit() {
   submitting.value = true;
   try {
     const endpoint = selectedMetal.value === 'gold' ? `${url}/user/gold` : `${url}/user/silver`;
+    const feePct = activeTab.value === 'buy' ? buyFeePercent.value : sellFeePercent.value;
+    const basePrice = currentPrice.value * Number(weightInput.value);
+    const feeAmount = basePrice * (feePct / 100);
+    
     const payload = {
        typeorder: activeTab.value,
        weight: Number(weightInput.value),
-       price: Number(amountInput.value), 
+       price: Number(amountInput.value),
+       fee: Math.round(feeAmount),
        [selectedMetal.value === 'gold' ? 'goldprice' : 'silverprice']: currentPrice.value
     };
     
