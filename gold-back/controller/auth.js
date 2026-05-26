@@ -3,7 +3,6 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const refmodel = require("../model/ref");
 const settingmodel = require("../model/setting");
-const { mockUsers, mockDB } = require("../mockUser");
 require('dotenv').config();
 
 async function sendOtpSms(phone, templateId, code) {
@@ -78,33 +77,19 @@ exports.login = async (req, res) => {
     try {
         const { phone, password } = req.body;
         if (!phone) return res.status(400).json({ error_msg: "شماره ارسال نشده" });
-        
-        // Try mock users first (for testing)
-        let user = null;
-        if (phone === '09123456789' && password === 'admin123') {
-            user = mockUsers.admin;
-        } else if (phone === '09876543210' && password === 'user123') {
-            user = mockUsers.user;
-        } else {
-            // Try database if no mock user found
-            try {
-                user = await usermodel.findOne({ phone });
-            } catch (dbError) {
-                console.log('DB not available, using mock only');
-            }
-        }
-        
+
+        const user = await usermodel.findOne({ phone });
         if (!user) return res.status(400).json({ error_msg: "کاربر وجود ندارد" });
 
         if (user.password === password) {
             const token = jwt.sign({ id: user._id }, process.env.JWT_KEY, { expiresIn: "7d" });
-            res.status(200).json({ data: token });
+            res.status(200).json({ data: token, role: user.role });
         } else {
             return res.status(400).json({ error_msg: "پسورد اشتباه است" });
         }
 
     } catch (e) {
-        res.status(500).json({ error_msg: "خطا در ارسال کد" });
+        res.status(500).json({ error_msg: "خطا در ورود" });
     }
 };
 

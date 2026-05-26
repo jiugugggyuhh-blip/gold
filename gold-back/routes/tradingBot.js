@@ -13,6 +13,8 @@ router.get('/yesterday-report', isuser, tradingBotController.getYesterdayReport)
 router.get('/trades', isuser, tradingBotController.getRecentTrades);
 router.get('/prices', isuser, tradingBotController.getTodayPrices);
 router.get('/current-price', isuser, tradingBotController.getCurrentPrice);
+router.get('/settings', isuser, tradingBotController.getUserSettings);
+router.put('/settings', isuser, tradingBotController.updateUserSettings);
 
 // Demo routes (برای محیط دمو)
 router.get('/demo/subscription', isuser, tradingBotDemoController.getSubscriptionStatus);

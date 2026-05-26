@@ -116,8 +116,8 @@ class TradingBotDemoController {
     // دریافت وضعیت اشتراک برای دمو
     async getSubscriptionStatus(req, res) {
         try {
-            const userId = req.user.id;
-            
+            const userId = req.user._id || req.user.id;
+
             // ایجاد رکورد شبیه‌سازی شده
             let bot = await TradingBot.findOne({ userId });
             
@@ -156,8 +156,8 @@ class TradingBotDemoController {
     // خرید اشتراک دمو (رایگان)
     async purchaseSubscription(req, res) {
         try {
-            const userId = req.user.id;
-            
+            const userId = req.user._id || req.user.id;
+
             // ایجاد یا به‌روزرسانی رکورد
             let bot = await TradingBot.findOne({ userId });
             

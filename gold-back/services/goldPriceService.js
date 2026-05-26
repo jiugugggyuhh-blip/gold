@@ -124,15 +124,8 @@ class GoldPriceService {
     }
 
     getFallbackPrice() {
-        return {
-            currentPrice: 2800000,
-            gold18: 2800000,
-            gold24: 3200000,
-            change: 0,
-            changePercent: 0,
-            timestamp: new Date(),
-            isFallback: true
-        };
+        if (this.cache) return this.cache;
+        throw new Error('قیمت طلا در دسترس نیست');
     }
 
     async getGoldPrice() {

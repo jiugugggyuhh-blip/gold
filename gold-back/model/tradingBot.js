@@ -65,6 +65,20 @@ const tradingBotSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: false
+    },
+    // تنظیمات کاربر
+    customInvestment: {
+        type: Number,
+        default: 0   // 0 = استفاده از investment پیش‌فرض
+    },
+    botEnabled: {
+        type: Boolean,
+        default: true
+    },
+    riskLevel: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+        default: 'medium'
     }
 }, {
     timestamps: true

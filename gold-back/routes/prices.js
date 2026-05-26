@@ -1,182 +1,160 @@
 const express = require('express');
-const axios = require('axios');
 const router = express.Router();
+const axios = require('axios');
+const { scrapeAllPrices } = require('../services/priceScraperService');
+const HourlyPrice = require('../model/hourlyPrice');
 
-// دریافت قیمت طلا، نقره و دلار از API BRS
+const BRS_API_KEY = 'B3HsYAYhzDQsmPdg2s9QPHQmlkWG1HGu';
+const BRS_URL = `https://api.brsapi.ir/Market/Gold_Currency.php?key=${BRS_API_KEY}`;
+
+let cache = null;
+let cacheTime = 0;
+const CACHE_MS = 60000;
+
+async function fetchBRS() {
+    const res = await axios.get(BRS_URL, { timeout: 12000 });
+    return res.data;
+}
+
+async function getCurrentPrices() {
+    const now = Date.now();
+    if (cache && now - cacheTime < CACHE_MS) return cache;
+
+    // BRS برای طلا، سکه، ارز و نقره (اگر داشت)
+    let brs = null;
+    try {
+        brs = await fetchBRS();
+    } catch (e) {
+        console.error('[prices] BRS API error:', e.message);
+    }
+
+    // tajnoghreh برای نقره و قیمت‌های تکمیلی
+    let scrape = null;
+    try {
+        scrape = await scrapeAllPrices();
+    } catch (e) {
+        console.error('[prices] Scrape error:', e.message);
+    }
+
+    const goldItems = brs?.gold || [];
+    const currencyItems = brs?.currency || [];
+
+    // نقره از tajnoghreh چون BRS نداره
+    const silver = [];
+    if (scrape) {
+        if (scrape['نقره 999']) silver.push({ symbol: 'silver999', name: 'نقره 999', price: scrape['نقره 999'], unit: 'تومان', change_value: 0, change_percent: 0 });
+        if (scrape['نقره 925']) silver.push({ symbol: 'silver925', name: 'نقره 925', price: scrape['نقره 925'], unit: 'تومان', change_value: 0, change_percent: 0 });
+    }
+
+    // ارزهای مهم برای نوار
+    const priorityCurrencies = ['USD', 'EUR', 'AED', 'GBP', 'USDT_IRT', 'TRY'];
+    const currency = currencyItems.filter(i => priorityCurrencies.includes(i.symbol));
+
+    cache = {
+        gold: goldItems,
+        silver,
+        currency,
+        allCurrency: currencyItems,
+        fetchedAt: new Date()
+    };
+    cacheTime = now;
+    return cache;
+}
+
+// قیمت لحظه‌ای
 router.get('/current', async (req, res) => {
     try {
-        const apiKey = 'B3HsYAYhzDQsmPdg2s9QPHQmlkWG1HGu';
-        const apiUrl = `https://Api.BrsApi.ir/Market/Gold_Currency.php?key=${apiKey}`;
-
-        const response = await axios.get(apiUrl, {
-            timeout: 10000
-        });
-
-        const data = response.data;
-
-        // استخراج قیمت‌ها از ساختار واقعی API
-        const prices = {
-            gold: [],
-            silver: [],
-            currency: []
-        };
-
-        // استخراج طلا
-        if (data.gold && Array.isArray(data.gold)) {
-            prices.gold = data.gold.map(item => ({
-                symbol: item.symbol,
-                name: item.name,
-                name_en: item.name_en,
-                price: item.price,
-                change_value: item.change_value,
-                change_percent: item.change_percent,
-                unit: item.unit
-            }));
-        }
-
-        // استخراج نقره
-        if (data.silver && Array.isArray(data.silver)) {
-            prices.silver = data.silver.map(item => ({
-                symbol: item.symbol,
-                name: item.name,
-                name_en: item.name_en,
-                price: item.price,
-                change_value: item.change_value,
-                change_percent: item.change_percent,
-                unit: item.unit
-            }));
-        }
-
-        // استخراج ارز
-        if (data.currency && Array.isArray(data.currency)) {
-            prices.currency = data.currency.map(item => ({
-                symbol: item.symbol,
-                name: item.name,
-                name_en: item.name_en,
-                price: item.price,
-                change_value: item.change_value,
-                change_percent: item.change_percent,
-                unit: item.unit
-            }));
-        }
-
-        res.json({
-            success: true,
-            data: prices
-        });
-
-    } catch (error) {
-        console.error('Price API Error:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        const data = await getCurrentPrices();
+        res.json({ success: true, data });
+    } catch (err) {
+        console.error('Price fetch error:', err.message);
+        res.status(500).json({ success: false, error: 'خطا در دریافت قیمت‌ها' });
     }
 });
 
-// دریافت تاریخچه قیمت طلا برای نمودار
-router.get('/gold/history', async (req, res) => {
+// تاریخچه ساعتی از دیتابیس + قیمت لحظه‌ای
+// GET /prices/history?symbol=goldMelted&period=7d
+router.get('/history', async (req, res) => {
     try {
-        // استفاده از داده‌های شبیه‌سازی شده برای نمودار
-        const basePrice = 25945000; // قیمت پایه طلا
-        
-        // ایجاد داده‌های نمودار با قیمت‌های واقعی‌تر
-        const history = [
-            { date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), price: basePrice - 120000 },
-            { date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), price: basePrice - 80000 },
-            { date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), price: basePrice - 45000 },
-            { date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), price: basePrice - 70000 },
-            { date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), price: basePrice - 30000 },
-            { date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), price: basePrice - 15000 },
-            { date: new Date(), price: basePrice }
-        ];
+        const { symbol = 'goldMelted', period = '7d' } = req.query;
 
-        res.json({
-            success: true,
-            data: history
-        });
+        const allowedSymbols = ['gold18', 'gold24', 'goldMelted', 'silver999', 'silver925', 'dollar', 'euro', 'coin'];
+        if (!allowedSymbols.includes(symbol)) {
+            return res.status(400).json({ success: false, error: 'symbol نامعتبر' });
+        }
 
-    } catch (error) {
-        console.error('Gold History API Error:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        const days = { '1d': 1, '7d': 7, '30d': 30, '90d': 90 }[period] || 7;
+        const since = new Date(Date.now() - days * 24 * 3600 * 1000);
+
+        const rows = await HourlyPrice.find(
+            { recordedAt: { $gte: since }, [symbol]: { $gt: 0 } },
+            { recordedAt: 1, [symbol]: 1, _id: 0 }
+        ).sort({ recordedAt: 1 });
+
+        let history = rows.map(r => ({ date: r.recordedAt, price: r[symbol] }));
+
+        // فقط قیمت لحظه‌ای رو به عنوان آخرین نقطه اضافه کن — fake data در frontend ساخته میشه
+        try {
+            const live = await getCurrentPrices();
+            const livePrice = symbol === 'goldMelted'
+                ? live.gold.find(i => i.symbol === 'IR_GOLD_MELTED')?.price
+                : symbol === 'gold18'
+                ? live.gold.find(i => i.symbol === 'IR_GOLD_18K')?.price
+                : symbol === 'gold24'
+                ? live.gold.find(i => i.symbol === 'IR_GOLD_24K')?.price
+                : symbol === 'silver999'
+                ? live.silver.find(i => i.symbol === 'silver999')?.price
+                : symbol === 'dollar'
+                ? live.currency.find(i => i.symbol === 'USD')?.price
+                : null;
+
+            if (livePrice) {
+                const lastSaved = history[history.length - 1];
+                const now = new Date();
+                if (!lastSaved || (now - new Date(lastSaved.date)) > 30 * 60 * 1000) {
+                    history.push({ date: now, price: livePrice });
+                }
+            }
+        } catch (_) {}
+
+        res.json({ success: true, symbol, period, days, liveOnly: history.length <= 1, data: history });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// دریافت تاریخچه قیمت نقره
-router.get('/silver/history', async (req, res) => {
+// آمار 24 ساعته
+router.get('/stats', async (req, res) => {
     try {
-        const apiKey = 'B3HsYAYhzDQsmPdg2s9QPHQmlkWG1HGu';
-        const apiUrl = `https://Api.BrsApi.ir/Market/Gold_Currency.php?key=${apiKey}`;
+        const since = new Date(Date.now() - 24 * 3600 * 1000);
 
-        const response = await axios.get(apiUrl, {
-            timeout: 10000
-        });
+        const [goldStats, silverStats] = await Promise.all([
+            HourlyPrice.aggregate([
+                { $match: { recordedAt: { $gte: since }, goldMelted: { $gt: 0 } } },
+                { $group: { _id: null, current: { $last: '$goldMelted' }, high: { $max: '$goldMelted' }, low: { $min: '$goldMelted' }, open: { $first: '$goldMelted' } } }
+            ]),
+            HourlyPrice.aggregate([
+                { $match: { recordedAt: { $gte: since }, silver999: { $gt: 0 } } },
+                { $group: { _id: null, current: { $last: '$silver999' }, high: { $max: '$silver999' }, low: { $min: '$silver999' }, open: { $first: '$silver999' } } }
+            ])
+        ]);
 
-        const data = response.data;
-
-        // ایجاد داده‌های نمودار
-        const history = [
-            { date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), price: data.silver - 500 },
-            { date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), price: data.silver - 300 },
-            { date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), price: data.silver - 100 },
-            { date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), price: data.silver - 200 },
-            { date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), price: data.silver - 150 },
-            { date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), price: data.silver - 50 },
-            { date: new Date(), price: data.silver }
-        ];
+        const calcChange = (open, current) => open ? current - open : 0;
+        const calcPercent = (open, current) => open ? ((current - open) / open * 100).toFixed(2) : '0';
+        const g = goldStats[0] || {};
+        const s = silverStats[0] || {};
 
         res.json({
             success: true,
-            data: history
+            data: {
+                gold: { ...g, change: calcChange(g.open, g.current), changePercent: calcPercent(g.open, g.current) },
+                silver: { ...s, change: calcChange(s.open, s.current), changePercent: calcPercent(s.open, s.current) }
+            }
         });
-
-    } catch (error) {
-        console.error('Silver History API Error:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-// دریافت تاریخچه قیمت دلار
-router.get('/currency/history', async (req, res) => {
-    try {
-        const apiKey = 'B3HsYAYhzDQsmPdg2s9QPHQmlkWG1HGu';
-        const apiUrl = `https://Api.BrsApi.ir/Market/Gold_Currency.php?key=${apiKey}`;
-
-        const response = await axios.get(apiUrl, {
-            timeout: 10000
-        });
-
-        const data = response.data;
-
-        // ایجاد داده‌های نمودار
-        const history = [
-            { date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), price: data.dollar - 500 },
-            { date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), price: data.dollar - 300 },
-            { date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), price: data.dollar - 100 },
-            { date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), price: data.dollar - 200 },
-            { date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), price: data.dollar - 150 },
-            { date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), price: data.dollar - 50 },
-            { date: new Date(), price: data.dollar }
-        ];
-
-        res.json({
-            success: true,
-            data: history
-        });
-
-    } catch (error) {
-        console.error('Currency History API Error:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
 module.exports = router;
+module.exports.getCurrentPrices = getCurrentPrices;
