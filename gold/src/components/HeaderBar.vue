@@ -1,5 +1,8 @@
 <template>
   <div>
+    <!-- Price Bar -->
+    <PriceBar />
+
     <header dir="rtl" class="text-white">
       <div class="container mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
@@ -99,9 +102,6 @@
         </transition>
       </div>
     </header>
-    
-    <!-- Price Bar -->
-    <PriceBar />
   </div>
 </template>
 

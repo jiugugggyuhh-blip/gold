@@ -50,6 +50,7 @@ import TradingBotAdmin from './page/admin/TradingBotAdmin.vue';
 import WalletView from './page/WalletView.vue';
 import ApiSettingsAdmin from './page/admin/ApiSettingsAdmin.vue';
 import ApiTest from './page/admin/ApiTest.vue';
+import ContentAdmin from './page/admin/ContentAdmin.vue';
 
 const url = process.env.VUE_APP_API_URL;
 
@@ -80,6 +81,7 @@ const routes = [
   { path: '/admin/trading-bot', component: TradingBotAdmin, meta: { layout: 'admin' } },
   { path: '/admin/api-settings', component: ApiSettingsAdmin, meta: { layout: 'admin' } },
   { path: '/admin/api-test', component: ApiTest, meta: { layout: 'admin' } },
+  { path: '/admin/content', component: ContentAdmin, meta: { layout: 'admin' } },
   { path: '/contact', component: ContactView, meta: { layout: 'page' } },
   { path: '/privacy', component: PrivacyView, meta: { layout: 'page' } },
   { path: '/fees', component: FeesView, meta: { layout: 'page' } },

@@ -50,7 +50,7 @@ async function login() {
       const token = data.data
       localStorage.setItem('token', token)
       axios.defaults.headers.common.Authorization = `Bearer ${token}`
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'به سایت خوش اومدی رفیق', showConfirmButton: false, timer: 3000, timerProgressBar: true })
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'به سایت زرتک خوش آمدید', showConfirmButton: false, timer: 3000, timerProgressBar: true })
       router.push('/user')
     }
   } catch (err) {

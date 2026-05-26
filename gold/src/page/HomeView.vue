@@ -1,35 +1,24 @@
-﻿<template>
+<template>
   <section class="gold-home py-8 md:py-14">
     <div class="hero-shell rounded-3xl p-5 md:p-10">
       <div class="grid grid-cols-12 gap-6 items-center">
         <div class="col-span-12 lg:col-span-7 space-y-6 text-white">
-          <span class="gold-chip">پلتفرم خرید و فروش آنلاین طلا</span>
+          <span class="gold-chip">{{ c.hero_chip }}</span>
           <h1 class="text-3xl md:text-5xl font-black leading-tight">
-            سرمایه گذاری روی طلا،
-            <span class="gold-text">ساده، امن و همیشه در دسترس</span>
+            {{ c.hero_title }}
+            <span class="gold-text">{{ c.hero_title_highlight }}</span>
           </h1>
-          <p class="text-white/75 leading-8 max-w-2xl">
-            خرید و فروش طلای آب شده با قیمت لحظه ای، کارمزد شفاف و تسویه سریع. یک تجربه حرفه ای برای
-            مدیریت دارایی طلا از موبایل یا دسکتاپ.
-          </p>
+          <p class="text-white/75 leading-8 max-w-2xl">{{ c.hero_desc }}</p>
 
           <div class="flex flex-wrap items-center gap-3">
-            <router-link to="/login" class="btn-gold">شروع سرمایه گذاری</router-link>
-            <router-link to="/fees" class="btn-ghost">مشاهده کارمزدها</router-link>
+            <router-link to="/login" class="btn-gold">{{ c.hero_btn_primary }}</router-link>
+            <router-link to="/fees" class="btn-ghost">{{ c.hero_btn_secondary }}</router-link>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="metric-card">
-              <div class="metric-value">24/7</div>
-              <div class="metric-label">معامله شبانه روزی</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-value">شفاف</div>
-              <div class="metric-label">بدون هزینه پنهان</div>
-            </div>
-            <div class="metric-card">
-              <div class="metric-value">امن</div>
-              <div class="metric-label">پشتیبانی و احراز هویت</div>
+            <div v-for="(m, i) in c.metrics" :key="i" class="metric-card">
+              <div class="metric-value">{{ m.value }}</div>
+              <div class="metric-label">{{ m.label }}</div>
             </div>
           </div>
         </div>
@@ -40,42 +29,30 @@
 
     <section class="mt-10 md:mt-14">
       <header class="text-center mb-8 md:mb-10 text-white">
-        <span class="gold-chip">چرا ما</span>
-        <h2 class="text-2xl md:text-4xl font-black mt-3">مزایای خرید طلا از مکسـی گلد</h2>
+        <span class="gold-chip">{{ c.features_chip }}</span>
+        <h2 class="text-2xl md:text-4xl font-black mt-3">{{ c.features_title }}</h2>
       </header>
 
       <div class="grid grid-cols-12 gap-5">
-        <article class="col-span-12 md:col-span-6 xl:col-span-3 feature-card">
-          <h3 class="feature-title">خرید و فروش سریع</h3>
-          <p class="feature-text">ثبت سفارش در چند ثانیه با قیمت روز و نمایش جزئیات کامل قبل از تایید.</p>
-        </article>
-        <article class="col-span-12 md:col-span-6 xl:col-span-3 feature-card">
-          <h3 class="feature-title">نگهداری امن دارایی</h3>
-          <p class="feature-text">ساختار امن برای مدیریت دارایی، همراه با گزارش شفاف تراکنش ها.</p>
-        </article>
-        <article class="col-span-12 md:col-span-6 xl:col-span-3 feature-card">
-          <h3 class="feature-title">ورود با سرمایه کم</h3>
-          <p class="feature-text">از مقادیر کم شروع کن و به مرور سرمایه ات را روی طلا افزایش بده.</p>
-        </article>
-        <article class="col-span-12 md:col-span-6 xl:col-span-3 feature-card">
-          <h3 class="feature-title">تسویه و نقدشوندگی</h3>
-          <p class="feature-text">هر زمان بخواهی امکان فروش و مدیریت موجودی با فرآیند ساده فراهم است.</p>
+        <article v-for="(f, i) in c.features" :key="i" class="col-span-12 md:col-span-6 xl:col-span-3 feature-card">
+          <h3 class="feature-title">{{ f.title }}</h3>
+          <p class="feature-text">{{ f.text }}</p>
         </article>
       </div>
     </section>
 
     <div id="shop" class="max-w-7xl mx-auto mt-14 scroll-mt-24">
       <div class="text-center mb-6 text-white">
-        <h2 class="text-2xl md:text-4xl font-black">فروشگاه طلا</h2>
-        <p class="text-white/70 mt-2">انتخاب محصول، مشاهده قیمت تقریبی و ثبت سفارش سریع</p>
+        <h2 class="text-2xl md:text-4xl font-black">{{ c.shop_title }}</h2>
+        <p class="text-white/70 mt-2">{{ c.shop_desc }}</p>
       </div>
       <GoldShop />
     </div>
 
     <div id="faq" class="mt-14 max-w-7xl mx-auto scroll-mt-24 text-white">
-      <h3 class="text-2xl md:text-4xl font-black text-center">سوالات پرتکرار</h3>
+      <h3 class="text-2xl md:text-4xl font-black text-center">{{ c.faq_title }}</h3>
       <div class="mt-6 space-y-4">
-        <template v-for="(item, i) in faqs" :key="i">
+        <template v-for="(item, i) in c.faqs" :key="i">
           <details class="faq-item group">
             <summary class="list-none cursor-pointer flex items-center justify-between gap-4">
               <span class="text-sm sm:text-base font-semibold text-white/95">{{ item.question }}</span>
@@ -97,17 +74,69 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, onMounted } from 'vue'
+import axios from 'axios'
 import GoldShop from '@/components/GoldShop.vue'
 import GoldCalculator from '@/components/GoldCalculator.vue'
 
-const faqs = reactive([
-  { question: 'طلای آب شده چیست؟', answer: 'طلای آب شده طلای ذوب شده و استانداردی است که برای سرمایه گذاری و معامله استفاده می شود.' },
-  { question: 'حداقل میزان خرید چقدر است؟', answer: 'می توانید با سرمایه کم شروع کنید و به مرور میزان خرید خود را افزایش دهید.' },
-  { question: 'قیمت ها چگونه محاسبه می شوند؟', answer: 'قیمت بر اساس نرخ لحظه ای بازار و کارمزد شفاف پلتفرم محاسبه می شود.' },
-  { question: 'آیا فروش فوری امکان پذیر است؟', answer: 'بله، در هر زمان می توانید دارایی خود را بفروشید و سفارش ثبت کنید.' },
-  { question: 'امنیت حساب کاربری چگونه تامین می شود؟', answer: 'ورود امن، کنترل حساب کاربری و فرآیندهای تایید هویت برای افزایش امنیت در نظر گرفته شده است.' }
-])
+const url = process.env.VUE_APP_API_URL || ''
+
+const c = reactive({
+  hero_chip: 'پلتفرم خرید و فروش آنلاین طلا',
+  hero_title: 'سرمایه گذاری روی طلا،',
+  hero_title_highlight: 'ساده، امن و همیشه در دسترس',
+  hero_desc: 'خرید و فروش طلای آب شده با قیمت لحظه ای، کارمزد شفاف و تسویه سریع. یک تجربه حرفه ای برای مدیریت دارایی طلا از موبایل یا دسکتاپ.',
+  hero_btn_primary: 'شروع سرمایه گذاری',
+  hero_btn_secondary: 'مشاهده کارمزدها',
+  metrics: [
+    { value: '24/7', label: 'معامله شبانه روزی' },
+    { value: 'شفاف', label: 'بدون هزینه پنهان' },
+    { value: 'امن', label: 'پشتیبانی و احراز هویت' }
+  ],
+  features_chip: 'چرا ما',
+  features_title: 'مزایای خرید طلا از مکسـی گلد',
+  features: [
+    { title: 'خرید و فروش سریع', text: 'ثبت سفارش در چند ثانیه با قیمت روز و نمایش جزئیات کامل قبل از تایید.' },
+    { title: 'نگهداری امن دارایی', text: 'ساختار امن برای مدیریت دارایی، همراه با گزارش شفاف تراکنش ها.' },
+    { title: 'ورود با سرمایه کم', text: 'از مقادیر کم شروع کن و به مرور سرمایه ات را روی طلا افزایش بده.' },
+    { title: 'تسویه و نقدشوندگی', text: 'هر زمان بخواهی امکان فروش و مدیریت موجودی با فرآیند ساده فراهم است.' }
+  ],
+  shop_title: 'فروشگاه طلا',
+  shop_desc: 'انتخاب محصول، مشاهده قیمت تقریبی و ثبت سفارش سریع',
+  faq_title: 'سوالات پرتکرار',
+  faqs: [
+    { question: 'طلای آب شده چیست؟', answer: 'طلای آب شده طلای ذوب شده و استانداردی است که برای سرمایه گذاری و معامله استفاده می شود.' },
+    { question: 'حداقل میزان خرید چقدر است؟', answer: 'می توانید با سرمایه کم شروع کنید و به مرور میزان خرید خود را افزایش دهید.' },
+    { question: 'قیمت ها چگونه محاسبه می شوند؟', answer: 'قیمت بر اساس نرخ لحظه ای بازار و کارمزد شفاف پلتفرم محاسبه می شود.' },
+    { question: 'آیا فروش فوری امکان پذیر است؟', answer: 'بله، در هر زمان می توانید دارایی خود را بفروشید و سفارش ثبت کنید.' },
+    { question: 'امنیت حساب کاربری چگونه تامین می شود؟', answer: 'ورود امن، کنترل حساب کاربری و فرآیندهای تایید هویت برای افزایش امنیت در نظر گرفته شده است.' }
+  ]
+})
+
+onMounted(async () => {
+  try {
+    const res = await axios.get(`${url}/admin/site-content`)
+    if (res.data.success && res.data.data) {
+      const d = res.data.data
+      if (d.hero_chip) c.hero_chip = d.hero_chip
+      if (d.hero_title) c.hero_title = d.hero_title
+      if (d.hero_title_highlight) c.hero_title_highlight = d.hero_title_highlight
+      if (d.hero_desc) c.hero_desc = d.hero_desc
+      if (d.hero_btn_primary) c.hero_btn_primary = d.hero_btn_primary
+      if (d.hero_btn_secondary) c.hero_btn_secondary = d.hero_btn_secondary
+      if (d.metrics?.length) c.metrics = d.metrics
+      if (d.features_chip) c.features_chip = d.features_chip
+      if (d.features_title) c.features_title = d.features_title
+      if (d.features?.length) c.features = d.features
+      if (d.shop_title) c.shop_title = d.shop_title
+      if (d.shop_desc) c.shop_desc = d.shop_desc
+      if (d.faq_title) c.faq_title = d.faq_title
+      if (d.faqs?.length) c.faqs = d.faqs
+    }
+  } catch {
+    // اگر API در دسترس نبود از مقادیر پیش‌فرض استفاده می‌شه
+  }
+})
 </script>
 
 <style scoped>

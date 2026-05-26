@@ -1,6 +1,7 @@
 const blogmodel = require("../model/blog");
 const ordermodel = require("../model/order");
 const usermodel = require("../model/user")
+const siteContentModel = require("../model/siteContent");
 const path = require('path');
 const bannermodel = require("../model/banner");
 const settingmodel = require("../model/setting");
@@ -1116,6 +1117,51 @@ exports.releaseCollateral = async (req, res) => {
 };
 
 
+
+// --- siteContent CMS ---
+exports.getSiteContent = async (req, res) => {
+    try {
+        let content = await siteContentModel.findOne({});
+        if (!content) {
+            content = await siteContentModel.create({});
+        }
+        res.json({ success: true, data: content });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.updateSiteContent = async (req, res) => {
+    try {
+        const {
+            hero_chip, hero_title, hero_title_highlight, hero_desc,
+            hero_btn_primary, hero_btn_secondary, metrics,
+            features_chip, features_title, features,
+            shop_title, shop_desc, faq_title, faqs
+        } = req.body;
+
+        const update = {
+            hero_chip, hero_title, hero_title_highlight, hero_desc,
+            hero_btn_primary, hero_btn_secondary, metrics,
+            features_chip, features_title, features,
+            shop_title, shop_desc, faq_title, faqs
+        };
+
+        // حذف فیلدهای undefined
+        Object.keys(update).forEach(k => update[k] === undefined && delete update[k]);
+
+        let content = await siteContentModel.findOne({});
+        if (!content) {
+            content = await siteContentModel.create(update);
+        } else {
+            content = await siteContentModel.findOneAndUpdate({}, update, { new: true, runValidators: false });
+        }
+
+        res.json({ success: true, data: content, message: 'محتوای سایت با موفقیت بروزرسانی شد' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 // --- دریافت کل کمک‌ها (برای ادمین) ---
 exports.getAllDonations = async (req, res) => {

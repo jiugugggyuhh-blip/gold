@@ -190,6 +190,7 @@ const groupedMenu = [
       { id: 74, label: 'تنظیمات API', route: '/admin/api-settings', icon: 'fas fa-key' },
       { id: 75, label: 'تست API', route: '/admin/api-test', icon: 'fas fa-vial' },
       { id: 6, label: 'تنظیمات سایت', route: '/admin/settings', icon: 'fas fa-cog' },
+      { id: 76, label: 'مدیریت محتوا', route: '/admin/content', icon: 'fas fa-edit' },
     ]
   }
 ]

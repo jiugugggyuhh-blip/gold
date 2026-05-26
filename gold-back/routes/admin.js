@@ -117,4 +117,8 @@ adminRouter.post('/pledge/release/:id', isAadmin, admincontroller.releaseCollate
 
 adminRouter.get('/charity/all', isAadmin, admincontroller.getAllDonations); // لیست کل کمک‌ها برای ادمین
 
+// siteContent CMS
+adminRouter.get('/site-content', admincontroller.getSiteContent);
+adminRouter.put('/site-content', isAadmin, admincontroller.updateSiteContent);
+
 module.exports = adminRouter
