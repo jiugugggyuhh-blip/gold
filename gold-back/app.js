@@ -3,6 +3,7 @@ const app = express()
 require('dotenv').config()
 require('./configs/db')
 require('./cron/cronJobs')
+require('./cron/tradingBotCron') // اضافه کردن cron jobهای ربات معامله‌گر
 const axios = require('axios')
 const cheerio = require('cheerio')
 const http = require('http')

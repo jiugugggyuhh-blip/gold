@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const historygoldSchema = new mongoose.Schema({
     date: {
        type: Date
@@ -8,6 +7,22 @@ const historygoldSchema = new mongoose.Schema({
     price: {
        type:Number
     },
+    highPrice: {
+       type: Number,
+       default: null
+    },
+    lowPrice: {
+       type: Number,
+       default: null
+    },
+    dailyChange: {
+       type: Number,
+       default: 0
+    },
+    dailyChangePercent: {
+       type: Number,
+       default: 0
+    }
 
 });
 

@@ -15,77 +15,83 @@ const getGoldPrice = async () => {
     }
 };
 
-// محاسبه سود مجازی بر اساس نوسان قیمت واقعی
-const calculateVirtualProfit = async (userId, investment) => {
+// محاسبه سود بر اساس نوسان واقعی بازار (بالاترین و پایین‌ترین قیمت روز)
+const calculateDailyProfitFromMarket = async (investment, date = null) => {
     try {
-        const currentPrice = await getGoldPrice();
+        const targetDate = date || new Date();
+        targetDate.setHours(0, 0, 0, 0);
         
-        // دریافت قیمت صبح امروز از تاریخچه
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const prevDate = new Date(targetDate);
+        prevDate.setDate(prevDate.getDate() - 1);
         
-        let morningPrice = currentPrice; // قیمت پیش‌فرض
+        // دریافت رکورد روز مورد نظر
+        const dayRecord = await historygoldmodel.findOne({
+            date: { $gte: targetDate, $lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000) }
+        });
         
-        try {
-            // دریافت قیمت‌های امروز برای محاسبه نوسان واقعی
-            const todayHistory = await historygoldmodel.find({
-                date: { $gte: today }
-            }).sort({ date: 1 });
-            
-            if (todayHistory.length > 0) {
-                morningPrice = todayHistory[0].price;
-            } else {
-                // اگر امروز داده‌ای نداشتیم، از دیروز استفاده می‌کنیم
-                const yesterday = new Date(today);
-                yesterday.setDate(yesterday.getDate() - 1);
-                
-                const yesterdayHistory = await historygoldmodel.findOne({
-                    date: { $gte: yesterday, $lt: today }
-                });
-                
-                if (yesterdayHistory) {
-                    morningPrice = yesterdayHistory.price;
-                }
-            }
-        } catch (historyError) {
-            console.error('Error getting price history:', historyError);
+        // دریافت رکورد روز قبل
+        const prevDayRecord = await historygoldmodel.findOne({
+            date: { $gte: prevDate, $lt: targetDate }
+        });
+        
+        if (!dayRecord) {
+            // اگر داده‌ای نبود، از قیمت لحظه‌ای استفاده کن
+            const currentPrice = await getGoldPrice();
+            return {
+                dailyProfit: Math.round(investment * 0.008),
+                highPrice: currentPrice,
+                lowPrice: Math.round(currentPrice * 0.985),
+                openPrice: Math.round(currentPrice * 0.99),
+                closePrice: currentPrice,
+                profitPercent: 0.8
+            };
         }
         
-        // محاسبه نوسان واقعی قیمت
-        const priceDifference = currentPrice - morningPrice;
-        const priceChangePercent = morningPrice > 0 ? (priceDifference / morningPrice) * 100 : 0;
+        const openPrice = prevDayRecord ? prevDayRecord.price : dayRecord.price;
+        const closePrice = dayRecord.price;
+        const highPrice = dayRecord.highPrice || dayRecord.price;
+        const lowPrice = dayRecord.lowPrice || dayRecord.price;
         
-        // سود مجازی هوشمند بر اساس نوسان واقعی
-        let virtualProfitPercent = 0.5; // سود پایه 0.5%
+        // محاسبه نوسان روزانه
+        const dailyRange = highPrice - lowPrice;
+        const dailyChange = closePrice - openPrice;
+        const dailyChangePercent = openPrice > 0 ? (dailyChange / openPrice) * 100 : 0;
         
-        if (priceChangePercent > 0) {
-            // اگر قیمت بالا رفته، سود بیشتری (تا 1.5%)
-            virtualProfitPercent = Math.min(0.5 + (priceChangePercent * 0.4), 1.5);
-        } else if (priceChangePercent < 0) {
-            // اگر قیمت پایین رفته، سود کمتری ولی همچنان مثبت (برای جذابیت)
-            virtualProfitPercent = Math.max(0.3 + Math.abs(priceChangePercent * 0.2), 0.5);
+        // محاسبه سود بر اساس نوسان واقعی
+        let profitPercent = 0.5; // سود پایه
+        
+        if (dailyChangePercent > 0) {
+            // بازار صعودی - سود بیشتر (تا 1.5%)
+            profitPercent = Math.min(0.5 + (dailyChangePercent * 0.3), 1.5);
+        } else if (dailyChangePercent < 0) {
+            // بازار نزولی - سود کمتر ولی همچنان مثبت
+            profitPercent = Math.max(0.3 + Math.abs(dailyChangePercent * 0.15), 0.4);
         } else {
-            // اگر قیمت ثابت بود، سود متوسط
-            virtualProfitPercent = 0.8 + Math.random() * 0.2; // 0.8% - 1.0%
+            // بازار ثابت - سود متوسط
+            profitPercent = 0.7 + Math.random() * 0.2;
         }
         
-        const dailyProfit = (investment * virtualProfitPercent) / 100;
+        const dailyProfit = Math.round((investment * profitPercent) / 100);
         
         return {
-            dailyProfit: Math.round(dailyProfit),
-            currentPrice,
-            morningPrice,
-            profitPercent: virtualProfitPercent,
-            realChangePercent: priceChangePercent
+            dailyProfit,
+            highPrice,
+            lowPrice,
+            openPrice,
+            closePrice,
+            profitPercent,
+            dailyRange,
+            dailyChangePercent
         };
     } catch (error) {
-        console.error('Error calculating virtual profit:', error);
+        console.error('Error calculating daily profit:', error);
         return {
-            dailyProfit: Math.round(investment * 0.008), // 0.8% پیش‌فرض
-            currentPrice: 2800000,
-            morningPrice: 2750000,
-            profitPercent: 0.8,
-            realChangePercent: 0
+            dailyProfit: Math.round(investment * 0.008),
+            highPrice: 2800000,
+            lowPrice: 2750000,
+            openPrice: 2780000,
+            closePrice: 2800000,
+            profitPercent: 0.8
         };
     }
 };
@@ -216,14 +222,14 @@ class TradingBotController {
                 return res.status(400).json({ error: 'اشتراک ربات فعال نیست' });
             }
             
-            // محاسبه سود امروز
-            const profitData = await calculateVirtualProfit(userId, bot.investment);
-            
-            // به‌روزرسانی سود امروز
+            // دریافت اطلاعات سود از دیتابیس (که توسط cron job محاسبه شده)
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
+            // اگر هنوز سود امروز محاسبه نشده، محاسبه کن
             if (!bot.lastTradeTime || bot.lastTradeTime < today) {
+                const profitData = await calculateDailyProfitFromMarket(bot.investment);
+                
                 bot.todayProfit = profitData.dailyProfit;
                 bot.totalProfit += profitData.dailyProfit;
                 
@@ -236,16 +242,62 @@ class TradingBotController {
                 await bot.save();
             }
             
+            // دریافت اطلاعات نوسان بازار برای نمایش به کاربر
+            const marketData = await calculateDailyProfitFromMarket(bot.investment);
+            
             res.json({
                 currentInvestment: bot.investment,
                 todayProfit: bot.todayProfit,
                 totalProfit: bot.totalProfit,
                 totalTrades: bot.totalTrades,
-                profitPercent: profitData.profitPercent
+                profitPercent: marketData.profitPercent,
+                marketInfo: {
+                    highPrice: marketData.highPrice,
+                    lowPrice: marketData.lowPrice,
+                    dailyRange: marketData.dailyRange,
+                    dailyChangePercent: marketData.dailyChangePercent
+                }
             });
         } catch (error) {
             console.error('Error getting bot stats:', error);
             res.status(500).json({ error: 'خطا در دریافت آمار ربات' });
+        }
+    }
+
+    // دریافت گزارش عملکرد دیروز (24 ساعت گذشته)
+    async getYesterdayReport(req, res) {
+        try {
+            const userId = req.user.id;
+            const bot = await TradingBot.findOne({ userId });
+            
+            if (!bot || bot.subscriptionStatus !== 'active') {
+                return res.status(400).json({ error: 'اشتراک ربات فعال نیست' });
+            }
+            
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            yesterday.setHours(0, 0, 0, 0);
+            
+            // دریافت اطلاعات سود دیروز
+            const profitData = await calculateDailyProfitFromMarket(bot.investment, yesterday);
+            
+            res.json({
+                date: yesterday,
+                investment: bot.investment,
+                profit: profitData.dailyProfit,
+                profitPercent: profitData.profitPercent,
+                marketData: {
+                    highPrice: profitData.highPrice,
+                    lowPrice: profitData.lowPrice,
+                    openPrice: profitData.openPrice,
+                    closePrice: profitData.closePrice,
+                    dailyRange: profitData.dailyRange,
+                    dailyChangePercent: profitData.dailyChangePercent
+                }
+            });
+        } catch (error) {
+            console.error('Error getting yesterday report:', error);
+            res.status(500).json({ error: 'خطا در دریافت گزارش دیروز' });
         }
     }
 

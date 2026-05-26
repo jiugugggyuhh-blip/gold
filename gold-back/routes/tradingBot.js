@@ -9,6 +9,7 @@ const router = express.Router();
 router.get('/subscription', isuser, tradingBotController.getSubscriptionStatus);
 router.post('/purchase', isuser, tradingBotController.purchaseSubscription);
 router.get('/stats', isuser, tradingBotController.getBotStats);
+router.get('/yesterday-report', isuser, tradingBotController.getYesterdayReport);
 router.get('/trades', isuser, tradingBotController.getRecentTrades);
 router.get('/prices', isuser, tradingBotController.getTodayPrices);
 router.get('/current-price', isuser, tradingBotController.getCurrentPrice);
