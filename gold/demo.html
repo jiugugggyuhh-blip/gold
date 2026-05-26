@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>پرشین گلد — Mint-Glass Ultra (Tailwind CDN)</title>
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { vazir: ['Vazirmatn', 'sans-serif'] },
+          colors: {
+            mint: { 300:'#86efac', 400:'#4ade80', 500:'#10b981' },
+            teal: { 400:'#2dd4bf' }
+          },
+          boxShadow: {
+            glass: '0 24px 60px rgba(0,0,0,0.45)',
+            mint: '0 18px 38px rgba(16,185,129,.35)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root{
+      --ring: rgba(180,255,230,.16);
+      --ring2: rgba(141,233,197,.28);
+    }
+    html,body{font-family:'Vazirmatn',sans-serif;background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(45,212,191,.14), transparent 60%),
+      radial-gradient(1000px 700px at 110% 110%, rgba(16,185,129,.12), transparent 60%),
+      linear-gradient(135deg,#06100f 0%,#0b1615 60%, #050909 100%)}
+    /* aurora + noise */
+    .aurora{position:fixed; inset:-20% -10% -10% -10%; filter:blur(48px); opacity:.55; pointer-events:none;
+      background:
+        conic-gradient(from 180deg at 30% 40%, rgba(16,185,129,.0) 0 20%, rgba(45,212,191,.25) 30%, rgba(16,185,129,.15) 45%, rgba(45,212,191,.0) 55%),
+        radial-gradient(60% 40% at 70% 20%, rgba(45,212,191,.22), transparent 60%),
+        radial-gradient(50% 40% at 20% 80%, rgba(16,185,129,.18), transparent 60%);
+      animation:aurora 14s ease-in-out infinite alternate; z-index:0}
+    @keyframes aurora{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(0,-4%,0) scale(1.05)}}
+    .noise{position:fixed; inset:0; opacity:.05; mix-blend-mode:overlay; pointer-events:none; z-index:0;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)"/></svg>');}
+    /* reveal */
+    .reveal{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease}
+    .reveal.show{opacity:1; transform:none}
+  </style>
+</head>
+<body class="text-white selection:bg-emerald-300/25">
+
+  <div class="aurora"></div>
+  <div class="noise"></div>
+
+  <main class="min-h-screen p-4 md:p-6">
+    <div class="max-w-6xl mx-auto relative z-10 space-y-4">
+
+      <!-- Header -->
+      <header class="sticky top-4 z-30">
+        <div class="rounded-2xl border shadow-glass backdrop-blur-lg p-4 md:p-5
+                    bg-[rgba(10,21,20,0.55)] border-[color:var(--ring)] relative overflow-hidden">
+          <div class="absolute inset-0 pointer-events-none opacity-60
+                      [mask:radial-gradient(closest-side,black_60%,transparent_61%)]
+                      bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0_40%,rgba(45,212,191,.15)_55%,transparent_70%_100%)]
+                      animate-[spin_8s_linear_infinite]"></div>
+
+          <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 class="text-2xl md:text-3xl font-extrabold
+                         bg-gradient-to-r from-mint-400 to-teal-400 bg-clip-text text-transparent drop-shadow-[0_0_22px_rgba(45,212,191,.18)]">
+                پرشین گلد
+              </h1>
+              <p class="text-white/70">امپراتوری طلای دیجیتال — نرخ لحظه‌ای، سفارش، کیف‌پول و گزارش‌های حرفه‌ای</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5
+                           bg-white/5 backdrop-blur-md border border-[color:var(--ring)] hover:border-[color:var(--ring2)]
+                           transition">
+                <span class="size-2 rounded-full bg-mint-400 shadow-[0_0_10px_#4ade80]"></span> نسخه 1.0.0
+              </span>
+              <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-white/5 border border-[color:var(--ring)]">Vue • Node.js</span>
+              <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-white/5 border border-[color:var(--ring)]">RTL & فارسی</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Grid -->
+      <section class="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4">
+
+        <!-- Left -->
+        <div class="space-y-4">
+          <!-- Intro -->
+          <div class="reveal group rounded-2xl border border-[color:var(--ring)] bg-[rgba(10,21,20,0.6)]
+                      shadow-glass backdrop-blur-xl p-5 relative overflow-hidden tilt">
+            <div class="absolute inset-0 pointer-events-none opacity-40
+                        [background:radial-gradient(500px_220px_at_var(--mx,50%)_var(--my,50%),rgba(45,212,191,.18),transparent_60%)]"></div>
+            <h3 class="text-xl font-bold">معرفی کوتاه</h3>
+            <p class="text-white/75 leading-relaxed mt-1">
+              پرشین‌گلد بستهٔ کامل راه‌اندازی فروش و مدیریت طلاست؛ لندینگ، پنل مدیریتی، سفارش‌گیری، کیف‌پول و گزارش‌گیری—با تم مینت-گلس.
+            </p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <a href="#gallery" data-magnet
+                 class="relative inline-flex items-center gap-2 rounded-xl px-4 py-2 font-extrabold text-[#06231c]
+                        bg-gradient-to-b from-mint-500 to-mint-400 border border-mint-500 shadow-mint transition
+                        hover:-translate-y-0.5">
+                <span class="spark absolute inset-0 pointer-events-none
+                             [background:radial-gradient(400px_200px_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,.45),transparent_60%)]
+                             opacity-25"></span>
+                پیش‌نمایش گالری
+              </a>
+              <a href="#roadmap" data-magnet
+                 class="relative inline-flex items-center gap-2 rounded-xl px-4 py-2 font-extrabold text-[#06231c]
+                        bg-gradient-to-b from-teal-400 to-mint-400 border border-teal-400 shadow-mint transition
+                        hover:-translate-y-0.5">
+                <span class="spark absolute inset-0 pointer-events-none
+                             [background:radial-gradient(400px_200px_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,.45),transparent_60%)]
+                             opacity-25"></span>
+                نقشه راه
+              </a>
+            </div>
+          </div>
+
+          <!-- Marquee -->
+          <div class="reveal rounded-xl overflow-hidden border border-[color:var(--ring)] bg-emerald-500/10">
+            <div class="flex gap-4 whitespace-nowrap py-2 px-3 animate-[mar_16s_linear_infinite]">
+              <span class="px-3 py-1 rounded-full bg-white/5 border border-[color:var(--ring)]">نرخ لحظه‌ای</span>
+              <span class="px-3 py-1 rounded-full bg-white/5 border border-[color:var(--ring)]">مدیریت سفارش</span>
+              <span class="px-3 py-1 rounded-full bg-white/5 border border-[color:var(--ring)]">کیف‌پول داخلی</span>
+              <span class="px-3 py-1 rounded-full bg-white/5 border border-[color:var(--ring)]">احراز هویت</span>
+              <span class="px-3 py-1 rounded-full bg-white/5 border border-[color:var(--ring)]">چارت و گزارش</span>
+              <span class="px-3 py-1 rounded-full bg-white/5 border border-[color:var(--ring)]">API انعطاف‌پذیر</span>
+              <!-- loop -->
+              <span class="px-3 py-1 rounded-full bg-white/5 border border-[color:var(--ring)]">نرخ لحظه‌ای</span>
+              <span class="px-3 py-1 rounded-full bg-white/5 border border-[color:var(--ring)]">مدیریت سفارش</span>
+              <span class="px-3 py-1 rounded-full bg-white/5 border border-[color:var(--ring)]">کیف‌پول داخلی</span>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div class="reveal rounded-2xl border border-[color:var(--ring)] bg-white/5 shadow-glass backdrop-blur-xl p-5">
+            <h3 class="text-xl font-bold mb-3">ویژگی‌ها</h3>
+            <div class="grid md:grid-cols-3 gap-3">
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-4 hover:-translate-y-1 transition">
+                <h4 class="font-semibold">نرخ لحظه‌ای</h4><p class="text-white/70 text-sm mt-1">اتصال API (فعلاً اسکرپ) و محاسبات زنده.</p>
+              </div>
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-4 hover:-translate-y-1 transition">
+                <h4 class="font-semibold">سفارش‌گیری</h4><p class="text-white/70 text-sm mt-1">ثبت، پیگیری، مدیریت و گزارش فروش.</p>
+              </div>
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-4 hover:-translate-y-1 transition">
+                <h4 class="font-semibold">کیف‌پول</h4><p class="text-white/70 text-sm mt-1">شارژ، برداشت، تاریخچه و درگاه.</p>
+              </div>
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-4 hover:-translate-y-1 transition">
+                <h4 class="font-semibold">داشبورد</h4><p class="text-white/70 text-sm mt-1">کنترل کاربران و تنظیمات.</p>
+              </div>
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-4 hover:-translate-y-1 transition">
+                <h4 class="font-semibold">امنیت</h4><p class="text-white/70 text-sm mt-1">احراز هویت و سطوح دسترسی.</p>
+              </div>
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-4 hover:-translate-y-1 transition">
+                <h4 class="font-semibold">قابل توسعه</h4><p class="text-white/70 text-sm mt-1">کد تمیز و افزونه‌پذیر.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gallery -->
+          <div id="gallery" class="reveal rounded-2xl border border-[color:var(--ring)] bg-white/5 shadow-glass backdrop-blur-xl p-5">
+            <h3 class="text-xl font-bold mb-3">گالری اسکرین‌شات</h3>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <figure class="rounded-xl border border-[color:var(--ring)] bg-white/5 overflow-hidden">
+                <img class="w-full h-48 object-cover transition hover:scale-105" src="https://uploadkon.ir/uploads/75f522_25Screenshot-2025-08-21-110312.png" alt="">
+                <figcaption class="px-3 py-2 text-white/70 text-sm">داشبورد مدیریتی</figcaption>
+              </figure>
+              <figure class="rounded-xl border border-[color:var(--ring)] bg-white/5 overflow-hidden">
+                <img class="w-full h-48 object-cover transition hover:scale-105" src="https://uploadkon.ir/uploads/cac922_25Screenshot-2025-08-22-164703.png" alt="">
+                <figcaption class="px-3 py-2 text-white/70 text-sm">سفارش‌ها</figcaption>
+              </figure>
+              <figure class="rounded-xl border border-[color:var(--ring)] bg-white/5 overflow-hidden">
+                <img class="w-full h-48 object-cover transition hover:scale-105" src="https://uploadkon.ir/uploads/fa1c22_25Screenshot-2025-08-22-164629.png" alt="">
+                <figcaption class="px-3 py-2 text-white/70 text-sm">کیف‌پول</figcaption>
+              </figure>
+              <figure class="rounded-xl border border-[color:var(--ring)] bg-white/5 overflow-hidden">
+                <img class="w-full h-48 object-cover transition hover:scale-105" src="https://uploadkon.ir/uploads/224122_25Screenshot-2025-08-22-164757.png" alt="">
+                <figcaption class="px-3 py-2 text-white/70 text-sm">ماشین‌حساب حرفه‌ای</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <!-- CTA / Dash -->
+          <div id="roadmap" class="reveal rounded-2xl border border-[color:var(--ring)]
+                                  bg-gradient-to-br from-white/5 to-white/10 shadow-glass backdrop-blur-xl p-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border border-[color:var(--ring)]
+                        rounded-xl bg-emerald-400/10 px-3 py-2">
+              <span class="font-extrabold text-mint-300">اقدامات فوری</span>
+              <span class="font-extrabold text-mint-300">تحلیل بازار</span>
+              <span class="font-extrabold text-mint-300">دسترسی آسان</span>
+              <span class="font-extrabold text-mint-300">نمایش دارایی‌ها</span>
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 mt-3">
+              <span class="px-3 py-1.5 rounded-full bg-mint-400 text-[#052019] font-extrabold border border-emerald-400/60 shadow-mint">شارژ و خرید سریع</span>
+              <span class="px-3 py-1.5 rounded-full bg-mint-400 text-[#052019] font-extrabold border border-emerald-400/60 shadow-mint">چارت‌های تعاملی</span>
+              <span class="px-3 py-1.5 rounded-full bg-mint-400 text-[#052019] font-extrabold border border-emerald-400/60 shadow-mint">مدیریت تجربه کاربر</span>
+              <span class="px-3 py-1.5 rounded-full bg-mint-400 text-[#052019] font-extrabold border border-emerald-400/60 shadow-mint">تراکنش‌های لحظه‌ای</span>
+            </div>
+            <p class="text-center text-white/70 mt-2">© 2025 پرشین گلد — طراحی مینت-گلس اولترا</p>
+          </div>
+        </div>
+
+        <!-- Right (aside) -->
+        <aside class="space-y-4">
+          <div class="reveal rounded-2xl border border-[color:var(--ring)] bg-white/5 shadow-glass backdrop-blur-xl p-5 tilt relative overflow-hidden">
+            <div class="absolute inset-0 pointer-events-none opacity-40
+                        [background:radial-gradient(500px_220px_at_var(--mx,50%)_var(--my,50%),rgba(45,212,191,.18),transparent_60%)]"></div>
+            <h3 class="text-xl font-bold mb-2">مشخصات فنی</h3>
+            <p class="text-white/70 leading-relaxed">بک‌اند: Node.js, Express, Socket.io, MongoDB<br>فرانت‌اند: Vue.js, TailwindCSS, Socket.io</p>
+            <div class="flex gap-2 mt-3">
+              <img src="https://uploadkon.ir/uploads/078d22_257578002-11zon.png" width="40" alt="">
+              <img src="https://uploadkon.ir/uploads/011622_253640297-11zon.png" width="40" alt="">
+              <img src="https://uploadkon.ir/uploads/ffd022_25free-tailwind-3d-icon-png-download-7577995-11zon.png" width="40" alt="">
+              <img src="https://uploadkon.ir/uploads/e90c22_25socket-io-logo-icon-144874.png" width="40" alt="">
+            </div>
+          </div>
+
+          <div class="reveal rounded-2xl border border-[color:var(--ring)] bg-white/5 shadow-glass backdrop-blur-xl p-5">
+            <h3 class="text-xl font-bold mb-2">پشتیبانی</h3>
+            <p class="text-white/70">پشتیبانی اولیه ۳۰ روز؛ امکان پشتیبانی ویژه و سفارشی‌سازی.</p>
+            <a href="https://gold.nodora.ir/" target="_blank"
+               class="mt-3 inline-flex items-center rounded-xl px-4 py-2 font-extrabold text-[#06231c]
+                      bg-gradient-to-b from-mint-500 to-mint-400 border border-mint-500 shadow-mint">وب‌سایت</a>
+          </div>
+
+          <div class="reveal rounded-2xl border border-[color:var(--ring)] bg-white/5 shadow-glass backdrop-blur-xl p-5">
+            <h3 class="text-xl font-bold mb-3">سوالات متداول</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-3">
+                <h4 class="font-semibold">درگاه پرداخت؟</h4>
+                <p class="text-white/70 text-sm mt-1">بله؛ زیبال فعلاً متصل است و درگاه‌های دیگر قابل افزودن‌اند.</p>
+              </div>
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-3">
+                <h4 class="font-semibold">نسخه موبایل؟</h4>
+                <p class="text-white/70 text-sm mt-1">کاملاً واکنش‌گرا و تست‌شده.</p>
+              </div>
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-3">
+                <h4 class="font-semibold">فروش نقره؟</h4>
+                <p class="text-white/70 text-sm mt-1">در اولین آپدیت اضافه می‌شود.</p>
+              </div>
+              <div class="rounded-xl border border-[color:var(--ring)] bg-white/5 p-3">
+                <h4 class="font-semibold">سفارشی‌سازی؟</h4>
+                <p class="text-white/70 text-sm mt-1">بله، خدمات سفارشی‌سازی ارائه می‌شود.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="reveal rounded-2xl border border-[color:var(--ring)] bg-white/5 shadow-glass backdrop-blur-xl p-5">
+            <h3 class="text-xl font-bold mb-2">نقشه راه توسعه</h3>
+            <ul class="list-disc pr-5 text-white/75 space-y-1">
+              <li>افزودن فروش نقره (آب‌شده و فیزیکی)</li>
+              <li>امکان کارت‌به‌کارت</li>
+              <li>فروش طلای فیزیکی</li>
+              <li>اپلیکیشن موبایل</li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+
+      <!-- Footer -->
+      <footer class="reveal flex items-center justify-between flex-wrap gap-2 py-4 border-t border-[color:var(--ring)]">
+        <div class="text-white/70">© 2025 Nodora — آماده انتشار</div>
+        <div class="flex gap-2">
+          <a class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-white/5 border border-[color:var(--ring)]" target="_blank" href="https://gold.nodora.ir/">وب‌سایت</a>
+          <a class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-white/5 border border-[color:var(--ring)]" target="_blank" href="https://gold.nodora.ir/docs">مستندات</a>
+        </div>
+      </footer>
+
+    </div>
+  </main>
+
+  <script>
+    /* Scroll reveal */
+    const io = new IntersectionObserver((es)=>es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('show') }),{threshold:.12});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+    /* 3D Tilt + glow (lightweight) */
+    document.querySelectorAll('.tilt').forEach(card=>{
+      card.addEventListener('pointermove', e=>{
+        const r = card.getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        const rx = ((y / r.height) - .5) * -6;
+        const ry = ((x / r.width)  - .5) *  6;
+        card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+        card.style.setProperty('--mx', (x/r.width*100)+'%');
+        card.style.setProperty('--my', (y/r.height*100)+'%');
+      }, {passive:true});
+      card.addEventListener('pointerleave', ()=>{ card.style.transform=''; });
+    });
+
+    /* Magnetic buttons + spark follow */
+    document.querySelectorAll('[data-magnet]').forEach(btn=>{
+      const spark = btn.querySelector('.spark');
+      btn.addEventListener('pointermove', e=>{
+        const r = btn.getBoundingClientRect();
+        const dx = e.clientX - (r.left + r.width/2);
+        const dy = e.clientY - (r.top  + r.height/2);
+        btn.style.transform = `translate(${dx*0.05}px, ${dy*0.05}px)`;
+        if(spark){
+          spark.style.setProperty('--mx', ((e.clientX - r.left)/r.width*100)+'%');
+          spark.style.setProperty('--my', ((e.clientY - r.top )/r.height*100)+'%');
+        }
+      }, {passive:true});
+      btn.addEventListener('pointerleave', ()=>{ btn.style.transform=''; });
+    });
+  </script>
+
+  <style>
+    @keyframes mar { to { transform: translateX(-50%); } }
+  </style>
+</body>
+</html>

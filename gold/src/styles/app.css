@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --blue: #1e3956;
+  --grren: #25b68a;
+  --grren2: #34cb74;
+  --blue-2: #1e3956;
+  --primary: rgb(4, 148, 182);
+  --bg-dark: #0b0e23;
+  --bg-secondary: #0c0d0f;
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --text-light: #f0f0f5;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --primary-blue: #f2801d;
+  --secondary-gray: #64748b;
+  --radius: 12px;
+  --transition: 0.3s ease;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  font-family: YekanBakhFaNum, sans-serif !important;
+  background-color: #0f1417;
+  color: #f8fafc;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 900;
+  font-family: PeydaWebFaNum, sans-serif !important;
+}
+
+th {
+  font-weight: 600;
+  font-family: dana, sans-serif !important;
+}
+
+p,
+td {
+  font-weight: 600;
+  font-family: YekanBakhFaNum, sans-serif !important;
+  margin-bottom: 0 !important;
+}
+
+div,
+label,
+span,
+a,
+li {
+  font-family: PeydaWebFaNum, sans-serif !important;
+}
+
+span {
+  font-weight: 900;
+}
+
+a {
+  text-decoration: none !important;
+  font-weight: 600;
+}
+
+ul {
+  list-style: none;
+}
+
+.f-anj {
+  font-family: anj, sans-serif !important;
+  font-size: 3rem;
+}
+
+.ped {
+  font-family: PeydaWebFaNum, sans-serif !important;
+}
+
+/* Small quality-of-life polish for scrollable panels */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(185, 241, 207, 0.45) rgba(255, 255, 255, 0.06);
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #b9f1cf 0%, #6dd4a8 100%);
+  border-radius: 999px;
+}

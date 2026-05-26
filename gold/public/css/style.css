@@ -1,0 +1,104 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: YekanBakhFaNum !important;
+    background:
+      radial-gradient(900px 350px at 100% -8%, rgba(255, 195, 65, 0.08), transparent 62%),
+      radial-gradient(700px 280px at -5% 110%, rgba(245, 158, 11, 0.08), transparent 65%),
+      #0f1417;
+    color: #ffffff;
+}
+
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 900;
+  font-family: PeydaWebFaNum !important;
+}
+
+
+th {
+    font-weight: 600;
+    font-family: dana !important;
+}
+
+
+p,
+td {
+    font-weight: 600;
+    font-family: YekanBakhFaNum !important;
+    margin-bottom: 0rem !important;
+}
+
+
+div,
+label {
+    font-weight: 600;
+    font-family: PeydaWebFaNum !important;
+}
+
+li {
+
+    font-family: PeydaWebFaNum !important;
+    margin-bottom: 0rem !important;
+}
+
+.f-anj {
+    font-family: 'anj' !important;
+    font-size: 3rem;
+}
+
+
+span {
+  font-weight: 900;
+    font-family: PeydaWebFaNum !important;
+}
+
+a {
+    text-decoration: none !important;
+    font-weight: 600;
+    font-family: PeydaWebFaNum !important;
+}
+
+.ped {
+    font-family: PeydaWebFaNum !important;
+}
+
+ul {
+    list-style: none;
+
+}
+
+
+:root {
+    --blue: #1E3956;
+    --grren: #25B68A;
+    --grren2: #34CB74;
+    --blue-2: #1E3956;
+    --primary: rgb(4, 148, 182);
+    --bg-dark: #0b0e23;
+    --bg-secondary: #0c0d0f;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --text-light: #f0f0f5;
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --primary-blue: #F2801D;
+    --secondary-gray: #64748B;
+    --radius: 12px;
+    --transition: 0.3s ease;
+}
+
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+    background: rgba(255, 197, 74, 0.28);
+    color: #fff;
+}
